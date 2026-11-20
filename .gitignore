@@ -1,0 +1,20 @@
+# Databricks bundle state
+.databricks/
+# Secrets and credentials
+.env
+.env.*
+*.pem
+*.key
+.databrickscfg
+*credentials*
+*secret*
+# Local notes
+notes/
+*.local.md
+scratch/
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+__pycache__/
+*.pyc
