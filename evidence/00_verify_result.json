@@ -1,0 +1,384 @@
+{
+ "inventory": {
+  "iss_auth": {
+   "folders": 363,
+   "files_incl_manifests": 726,
+   "mbytes": 1320.0,
+   "first": "2025-11-20",
+   "last": "2026-11-17"
+  },
+  "mrd_events": {
+   "folders": 310,
+   "files_incl_manifests": 620,
+   "mbytes": 338.3,
+   "first": "2026-01-12",
+   "last": "2026-11-17"
+  },
+  "atl_daily": {
+   "folders": 363,
+   "files_incl_manifests": 726,
+   "mbytes": 842.8,
+   "first": "2025-11-20",
+   "last": "2026-11-17"
+  },
+  "merchant_master": {
+   "folders": 363,
+   "files_incl_manifests": 726,
+   "mbytes": 6.2,
+   "first": "2025-11-20",
+   "last": "2026-11-17"
+  },
+  "card_portfolio": {
+   "folders": 28,
+   "files_incl_manifests": 56,
+   "mbytes": 3.8,
+   "first": "2025-11-20",
+   "last": "2026-09-18"
+  },
+  "acquirer_ref": {
+   "folders": 14,
+   "files_incl_manifests": 28,
+   "mbytes": 0.2,
+   "first": "2025-11-20",
+   "last": "2026-11-01"
+  },
+  "ref": {
+   "folders": 1,
+   "files_incl_manifests": 3,
+   "mbytes": 0.0,
+   "first": "2025-11-20",
+   "last": "2025-11-20"
+  }
+ },
+ "n_checks": 27,
+ "n_pass": 27,
+ "checks": [
+  {
+   "check": "DQ1_duplicate_rows",
+   "answer_key": 219393,
+   "recomputed_from_files": 219393,
+   "match": true
+  },
+  {
+   "check": "DQ2_bad_amount_rows",
+   "answer_key": 33715,
+   "recomputed_from_files": 33715,
+   "match": true
+  },
+  {
+   "check": "DQ3_future_ts_rows",
+   "answer_key": 11059,
+   "recomputed_from_files": 11059,
+   "match": true
+  },
+  {
+   "check": "DQ4_null_auth_id_rows",
+   "answer_key": 10839,
+   "recomputed_from_files": 10839,
+   "match": true
+  },
+  {
+   "check": "DQ5_unmapped_codes",
+   "answer_key": [
+    "M201",
+    "M202",
+    "M203",
+    "M204",
+    "M205",
+    "M206",
+    "M207",
+    "M208",
+    "M209",
+    "M210",
+    "M211",
+    "M212"
+   ],
+   "recomputed_from_files": [
+    "M201",
+    "M202",
+    "M203",
+    "M204",
+    "M205",
+    "M206",
+    "M207",
+    "M208",
+    "M209",
+    "M210",
+    "M211",
+    "M212"
+   ],
+   "match": true
+  },
+  {
+   "check": "DQ5_unmapped_rows",
+   "answer_key": 222,
+   "recomputed_from_files": 222,
+   "match": true
+  },
+  {
+   "check": "DQ6_merchants_mid_variant_seen_on_mrd",
+   "answer_key": 5840,
+   "recomputed_from_files": 5840,
+   "match": true
+  },
+  {
+   "check": "DQ7_out_of_sequence_card_records",
+   "answer_key": 186,
+   "recomputed_from_files": 186,
+   "match": true
+  },
+  {
+   "check": "DQ10_merchants_stale_mcc_seen",
+   "answer_key": 776,
+   "recomputed_from_files": 776,
+   "match": true
+  },
+  {
+   "check": "DQ8_control_total_mismatch",
+   "answer_key": {
+    "folder": "atl_daily/2026-08-05",
+    "rows_missing": 442
+   },
+   "recomputed_from_files": [
+    {
+     "file": "ATL_DAILY_20260805_202608060600.txt",
+     "manifest": 24376,
+     "actual": 23934
+    }
+   ],
+   "match": true
+  },
+  {
+   "check": "DQ9_late_files",
+   "answer_key": [
+    "atl_daily/2026-03-10",
+    "atl_daily/2026-06-17",
+    "atl_daily/2026-10-14"
+   ],
+   "recomputed_from_files": [
+    "atl_daily/2026-03-10",
+    "atl_daily/2026-06-17",
+    "atl_daily/2026-10-14"
+   ],
+   "match": true
+  },
+  {
+   "check": "INC1_rows",
+   "answer_key": 238,
+   "recomputed_from_files": 238,
+   "match": true
+  },
+  {
+   "check": "INC1_distinct_merchants",
+   "answer_key": 124,
+   "recomputed_from_files": 124,
+   "match": true
+  },
+  {
+   "check": "INC1_window",
+   "answer_key": [
+    "2026-09-24",
+    "2026-10-08"
+   ],
+   "recomputed_from_files": [
+    "2026-09-24",
+    "2026-10-08"
+   ],
+   "match": true
+  },
+  {
+   "check": "INC2_rows",
+   "answer_key": 202,
+   "recomputed_from_files": 202,
+   "match": true
+  },
+  {
+   "check": "INC2_distinct_merchants",
+   "answer_key": 190,
+   "recomputed_from_files": 190,
+   "match": true
+  },
+  {
+   "check": "INC2_window",
+   "answer_key": [
+    "2026-10-12",
+    "2026-10-20"
+   ],
+   "recomputed_from_files": [
+    "2026-10-12",
+    "2026-10-20"
+   ],
+   "match": true
+  },
+  {
+   "check": "INC3_rows",
+   "answer_key": 1277,
+   "recomputed_from_files": 1277,
+   "match": true
+  },
+  {
+   "check": "INC3_distinct_merchants",
+   "answer_key": 973,
+   "recomputed_from_files": 973,
+   "match": true
+  },
+  {
+   "check": "INC3_window",
+   "answer_key": [
+    "2026-11-02",
+    "2026-11-12"
+   ],
+   "recomputed_from_files": [
+    "2026-11-02",
+    "2026-11-12"
+   ],
+   "match": true
+  },
+  {
+   "check": "INC4_rows",
+   "answer_key": 605,
+   "recomputed_from_files": 605,
+   "match": true
+  },
+  {
+   "check": "INC4_distinct_merchants",
+   "answer_key": 581,
+   "recomputed_from_files": 581,
+   "match": true
+  },
+  {
+   "check": "INC4_window",
+   "answer_key": [
+    "2026-11-14",
+    "2026-11-16"
+   ],
+   "recomputed_from_files": [
+    "2026-11-14",
+    "2026-11-16"
+   ],
+   "match": true
+  },
+  {
+   "check": "INC4_stip_approved",
+   "answer_key": 434,
+   "recomputed_from_files": 434,
+   "match": true
+  },
+  {
+   "check": "DECOY_rows_vs_excess_all_networks",
+   "answer_key": 2166,
+   "recomputed_from_files": 2124,
+   "match": true
+  },
+  {
+   "check": "DECOY_both_networks_elevated",
+   "answer_key": "ratio > 1.8 on ATL and MRD",
+   "recomputed_from_files": [
+    3.65,
+    3.83
+   ],
+   "match": true
+  },
+  {
+   "check": "calibration_gap_pp",
+   "answer_key": 0.94,
+   "recomputed_from_files": 0.95,
+   "match": true
+  }
+ ],
+ "recomputed": {
+  "DQ1_duplicate_rows": 219393,
+  "DQ2_bad_amount_rows": 33715,
+  "DQ3_future_ts_rows": 11059,
+  "DQ4_null_auth_id_rows": 10839,
+  "DQ5_unmapped_codes": [
+   "M201",
+   "M202",
+   "M203",
+   "M204",
+   "M205",
+   "M206",
+   "M207",
+   "M208",
+   "M209",
+   "M210",
+   "M211",
+   "M212"
+  ],
+  "DQ5_unmapped_rows": 222,
+  "DQ6_merchants_mid_variant_seen_on_mrd": 5840,
+  "DQ7_out_of_sequence_card_records": 186,
+  "DQ8_control_total_mismatch": [
+   {
+    "file": "ATL_DAILY_20260805_202608060600.txt",
+    "manifest": 24376,
+    "actual": 23934
+   }
+  ],
+  "DQ9_late_files": [
+   "atl_daily/2026-03-10",
+   "atl_daily/2026-06-17",
+   "atl_daily/2026-10-14"
+  ],
+  "DQ10_merchants_stale_mcc_seen": 776,
+  "INC1": {
+   "rows": 238,
+   "distinct_merchants": 124,
+   "window_seen": [
+    "2026-09-24",
+    "2026-10-08"
+   ]
+  },
+  "INC2": {
+   "rows": 202,
+   "distinct_merchants": 190,
+   "window_seen": [
+    "2026-10-12",
+    "2026-10-20"
+   ]
+  },
+  "INC3": {
+   "rows": 1277,
+   "distinct_merchants": 973,
+   "window_seen": [
+    "2026-11-02",
+    "2026-11-12"
+   ]
+  },
+  "INC4": {
+   "rows": 605,
+   "distinct_merchants": 581,
+   "window_seen": [
+    "2026-11-14",
+    "2026-11-16"
+   ]
+  },
+  "INC4_stip_approved": 434,
+  "DECOY": {
+   "ATL": {
+    "baseline_rate": 0.00906,
+    "window_rate": 0.03304,
+    "ratio": 3.65,
+    "excess_rows": 1702
+   },
+   "MRD": {
+    "baseline_rate": 0.00851,
+    "window_rate": 0.03262,
+    "ratio": 3.83,
+    "excess_rows": 431
+   },
+   "ISSUER_all": {
+    "baseline_rate": 0.00895,
+    "window_rate": 0.03287,
+    "ratio": 3.67,
+    "excess_rows": 2124
+   }
+  },
+  "calibration": {
+   "wave6_first30d_approval": 0.9683,
+   "atl_same_period_approval": 0.9778,
+   "gap_pp": 0.95,
+   "avg_ticket": 78.56
+  }
+ }
+}

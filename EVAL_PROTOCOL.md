@@ -81,3 +81,9 @@ The run also ends with a JSON summary.
 ## Amendments
 
 *(none yet; add dated notes below, never edit the sections above)*
+
+### Amendment 1: 2026-11-20 (before any data was generated)
+- **Change:** the synthetic data covers **12 months** (business dates 2025-11-20 → 2026-11-19) instead of 60 days, per the data-generator brief ("at least 12 months").
+- **Effect on the protocol:** "days 1–60" means the **last 60 days** (the evaluation window, 2026-09-21 → 2026-11-19). Tuning = window days 1–40 (2026-09-21 → 2026-10-30); held out = window days 41–60 (2026-10-31 → 2026-11-19). The 10 earlier months are history only; the "prior windows only" timing rule already allows them to be used for baselines. No other section changes.
+- **Incident detail fixed at generation time:** INC2's MCC group is "travel and lodging" = {4511, 4722, 7011, 7512}. Brand-specific MCC ranges (3000–3999) are not used, because they denote real named companies.
+- **Results affected:** none (no results existed).

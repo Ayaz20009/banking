@@ -9,12 +9,12 @@
 ## 1. Data flow
 
 ```
- tools/gen_data.py (synthetic generator, seeded; plants incidents per D-DATA)
+ src/data/generate.py (synthetic generator, seeded; plants incidents per D-DATA)
         │  writes CSV/JSON files, one folder per source, one file per day
         ▼
- /Volumes/<cat>/<schema>/raw/  {issuer_auth, network_auth, legacy_auth, merchants, acquirers, cards, ref}
+ /Volumes/<cat>/<schema>/landing/  {issuer_auth, network_auth, legacy_auth, merchants, acquirers, cards, ref}
         │
-        │  JOB febar_main  (trigger: file arrival on raw/)   (D11 ✓)
+        │  JOB febar_main  (trigger: file arrival on landing/)   (D11 ✓)
         │
  ┌──────┴───────────────────── T1  PIPELINE febar_pipeline (Lakeflow SDP, SQL, serverless) ──────────────────┐
  │ BRONZE (Auto Loader → streaming tables; + _source_file, _load_ts)                                         │
@@ -68,7 +68,7 @@
 
 ### 2.1 Lakeflow (ingest and conform)
 - **For the Director:** one trusted, deduplicated view of every authorization across both networks, with every decline mapped to one standard category. No more reconciling five systems by hand.
-- **Reads:** `/Volumes/<cat>/<schema>/raw/*`
+- **Reads:** `/Volumes/<cat>/<schema>/landing/*`
 - **Writes:** `bronze_*`, `ref_*`, `silver_*`, `quarantine_auth`, `gold_auth_hourly`, `gold_baseline_gap`
 - **Features:**
   - Lakeflow Spark Declarative Pipelines (SQL, serverless)
@@ -216,9 +216,9 @@ databricks.yml
     dev: { mode: development, default: true, workspace: { host: https://fevm-classic-stable-zjnu75.cloud.databricks.com } }
 
 resources/
-  febar.schema.yml       schema network_migration + volume raw (managed)
+  febar.schema.yml       schema network_migration + volume landing (managed)
   febar.pipeline.yml     febar_pipeline: serverless SDP, SQL in src/pipeline/, catalog/schema from vars
-  febar_main.job.yml     febar_main: T0–T6, file-arrival trigger on the raw volume
+  febar_main.job.yml     febar_main: T0–T6, file-arrival trigger on the landing volume
   febar_replay.job.yml   febar_replay: generate / drop the next day of synthetic files (manual; used to demo detection)
   febar.app.yml          febar_app: source src/app/, bindings for the SQL warehouse, Lakebase and Genie
   (Lakebase project: a bundle resource if the CLI version supports postgres projects; otherwise tools/create_lakebase.py, idempotent; checked at build time)
@@ -240,7 +240,7 @@ Commands: `databricks bundle validate --strict --profile febar` → `databricks 
 | T5 `wave_readiness` | SQL file | T4 | Rebuild `gold_wave_readiness` | waves GO/HOLD |
 | T6 `evidence_snapshot` | notebook | T5 | Collect counts, checks and latency into one JSON | all checks pass/fail |
 
-- **Trigger:** file arrival on `/Volumes/<cat>/<schema>/raw/` (D11 ✓), with a 60 s minimum interval between triggers. Manual run is always available.
+- **Trigger:** file arrival on `/Volumes/<cat>/<schema>/landing/` (D11 ✓), with a 60 s minimum interval between triggers. Manual run is always available.
 - **Demo loop:** run `febar_replay` → a file lands → `febar_main` fires → a new anomaly appears in the App. The time from landing to anomaly is recorded as the measured detection latency.
 - **Separately:** the evaluation (`src/ai/evaluate.py`) runs once, as a task in `febar_replay` with `mode=eval`, after all 60 days have landed.
 

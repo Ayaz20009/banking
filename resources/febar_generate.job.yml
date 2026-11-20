@@ -1,0 +1,31 @@
+resources:
+  jobs:
+    febar_generate:
+      name: febar_generate
+      description: "Synthetic source-system files -> landing volume, then verify the answer key from the files"
+      max_concurrent_runs: 1
+      parameters:
+        - name: mode
+          default: backfill
+        - name: replay_date
+          default: ""
+        - name: seed
+          default: "20261120"
+      tasks:
+        - task_key: generate
+          notebook_task:
+            notebook_path: ../src/data/generate.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              mode: "{{job.parameters.mode}}"
+              replay_date: "{{job.parameters.replay_date}}"
+              seed: "{{job.parameters.seed}}"
+        - task_key: verify_answer_key
+          depends_on:
+            - task_key: generate
+          notebook_task:
+            notebook_path: ../src/data/verify_answer_key.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}

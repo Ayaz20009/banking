@@ -97,3 +97,11 @@
   - **Decoy:** a holiday spike in legitimate insufficient-funds declines.
 - **Alternatives:** incident #1 + the decoy only.
 - **Why:** [REWRITE IN YOUR WORDS] Enough distinct incidents for a held-out test; the decoy proves the method separates acceptance failures from legitimate issuer declines.
+
+## 2026-11-20 — Synthetic source data design
+- **Decision:** approved as proposed.
+  - 7 source systems; 12 months; about 30K attempts a day (about 11M); invented "Meridian" (acquired) and "Atlas" (legacy) networks.
+  - Messiness and planted findings: DQ1–DQ10, INC1–INC4 plus a decoy.
+  - The landing volume is renamed `raw` → `landing`; the last 60 days form the evaluation window (EVAL_PROTOCOL Amendment 1).
+- **Alternatives:** 15K/day (faster, sparser slices); 60 days only (conflicts with the 12-month requirement).
+- **Why:** [REWRITE IN YOUR WORDS]

@@ -1,0 +1,78 @@
+[
+ {
+  "id": "INC1",
+  "split": "tuning",
+  "type": "ACCEPTANCE_CONFIG",
+  "network": "MRD",
+  "window": [
+   "2026-09-24",
+   "2026-10-08"
+  ],
+  "slice": {
+   "acquirer": "ACQ-017",
+   "channel": "ECOM",
+   "pos_entry_mode": "81"
+  }
+ },
+ {
+  "id": "INC2",
+  "split": "tuning",
+  "type": "CROSS_BORDER_BLOCK",
+  "network": "MRD",
+  "window": [
+   "2026-10-12",
+   "2026-10-20"
+  ],
+  "slice": {
+   "cross_border": true,
+   "mcc_group": "TRAVEL_LODGING",
+   "mcc": [
+    4511,
+    4722,
+    7011,
+    7512
+   ]
+  }
+ },
+ {
+  "id": "INC3",
+  "split": "holdout",
+  "type": "CARD_ON_FILE_STALE",
+  "network": "MRD",
+  "window": [
+   "2026-11-02",
+   "2026-11-12"
+  ],
+  "slice": {
+   "channel": "REC",
+   "recurring": true
+  }
+ },
+ {
+  "id": "INC4",
+  "split": "holdout",
+  "type": "PROCESSOR_TIMEOUT",
+  "network": "MRD",
+  "window": [
+   "2026-11-14",
+   "2026-11-16"
+  ],
+  "slice": {
+   "region": "SE"
+  }
+ },
+ {
+  "id": "DECOY",
+  "split": "holdout",
+  "type": "ISSUER_LEGIT_NSF",
+  "network": "BOTH",
+  "window": [
+   "2026-11-06",
+   "2026-11-08"
+  ],
+  "slice": {
+   "all": true
+  },
+  "must_not_flag_as_acceptance": true
+ }
+]
