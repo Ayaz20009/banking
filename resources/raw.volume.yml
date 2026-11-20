@@ -1,0 +1,8 @@
+resources:
+  volumes:
+    raw:
+      catalog_name: ${var.catalog}
+      schema_name: ${resources.schemas.network_migration.name}
+      name: raw
+      volume_type: MANAGED
+      comment: "Landing zone for synthetic source files, one folder per source system"

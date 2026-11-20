@@ -1,6 +1,6 @@
 # Use Case: Acceptance Risk Control for Network Migration
 
-> **Status: DRAFT, awaiting your approval.** The sections marked `[YOUR WORDS]` were drafted by AI from your discovery answers; rewrite them in your own words.
+> **Status: APPROVED 2026-11-20.** The sections marked `[YOUR WORDS]` were drafted by AI from your discovery answers; rewrite them in your own words.
 > `[ASSUMPTION]` = a number or fact I proposed, not from you. `[CHECK]` = verify before you use it.
 
 **Customer:** a large U.S. bank and credit card issuer (FINS) that has acquired a payment network and is moving its card portfolios onto it in waves.

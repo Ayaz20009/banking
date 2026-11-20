@@ -1,0 +1,37 @@
+# FE Bar: Acceptance Risk Control for Network Migration
+# Deploy: databricks bundle validate --strict --profile febar
+#         databricks bundle deploy --profile febar
+bundle:
+  name: febar
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog catalog for all objects
+    default: classic_stable_zjnu75_catalog
+  schema:
+    description: Schema for all tables, volumes and functions
+    default: network_migration
+  warehouse_id:
+    description: Serverless SQL warehouse (Serverless Starter Warehouse)
+    default: 34e45919b39491cf
+  llm_endpoint:
+    description: Foundation model endpoint for ai_query explanations
+    default: databricks-claude-sonnet-5-5
+  lakebase_project:
+    description: Lakebase Autoscaling project for the case store
+    default: febar-ops
+  app_name:
+    description: "App name: lowercase letters, digits and hyphens; max 30 characters"
+    default: febar-ops-app
+
+targets:
+  dev:
+    default: true
+    # Not using `mode: development` on purpose: it would prefix the schema name
+    # (dev_<user>_network_migration) and break the agreed UC namespace.
+    workspace:
+      host: https://fevm-classic-stable-zjnu75.cloud.databricks.com
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}

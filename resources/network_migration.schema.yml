@@ -1,0 +1,7 @@
+resources:
+  schemas:
+    network_migration:
+      catalog_name: ${var.catalog}
+      name: ${var.schema}
+      comment: "FE Bar prototype: acceptance risk control for card migration onto an acquired payment network. Synthetic data only."
+

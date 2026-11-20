@@ -1,6 +1,6 @@
 # Build Plan: Acceptance Risk Control for Network Migration
 
-> **Status: DRAFT, awaiting approval.** All decisions D1–D11 and D-DATA were made on 2026-11-20 (see DECISIONS.md); each is marked (Dn ✓) where it applies. Built from FEBAR_CONTEXT.md and USE_CASE.md.
+> **Status: APPROVED 2026-11-20.** All decisions D1–D11 and D-DATA were made on 2026-11-20 (see DECISIONS.md); each is marked (Dn ✓) where it applies. Built from FEBAR_CONTEXT.md and USE_CASE.md.
 > **Namespace:** `classic_stable_zjnu75_catalog.network_migration`, referred to below as `<ns>`. This replaces the originally proposed customer-named schema, per DECISIONS.md. Both names are bundle variables.
 > **Target effort:** 8.0 engineer-hours, the top of the 4–8 h budget (§6).
 
