@@ -204,6 +204,7 @@
 **As built (step 2, 2026-11-21):**
 - `bronze_manifests` became `bronze_file_manifests`, a Python materialized view: files starting with `_` are hidden from `read_files`.
 - Added `silver_issuer_auth` (dedup on `auth_id`), `silver_acquirers`, `recon_file_control` (per-file control totals), and the private staging tables `stg_issuer_auth` and `stg_cards`, which carry the expectations.
+- **Gold grain (decision 2026-11-21):** `gold_auth_daily` (day × all dimensions, scored by detection) + `gold_auth_hourly` (hour × network × region × channel × issuer segment).
 - `silver_merchants` is the latest record per merchant, a materialized view, instead of a crosswalk table: normalised IDs for both networks sit on the same row.
 
 ## 4. Bundle layout

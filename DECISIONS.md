@@ -105,3 +105,8 @@
   - The landing volume is renamed `raw` → `landing`; the last 60 days form the evaluation window (EVAL_PROTOCOL Amendment 1).
 - **Alternatives:** 15K/day (faster, sparser slices); 60 days only (conflicts with the 12-month requirement).
 - **Why:** [REWRITE IN YOUR WORDS]
+
+## 2026-11-21 — Gold grain
+- **Decision:** option A. `gold_auth_daily` keeps all the dimensions at day grain (the table detection scores); `gold_auth_hourly` is redefined as a small hourly table by network × region × channel × issuer segment (intraday timing).
+- **Alternatives:** (B) keep the hourly × 9-dimension table (7.9M rows) and have detection roll up itself.
+- **Why:** [REWRITE IN YOUR WORDS] At 1:270 scale the hourly grain was almost row-level, too sparse to score and slow for Genie and the App.

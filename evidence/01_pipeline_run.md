@@ -175,3 +175,42 @@ The matched-baseline gap (0.96 pp) agrees with the generator's calibration (0.94
 | UNMAPPED | UNMAPPED | 220 |
 
 `decline_type` separates **acceptance failures** (network-side and fixable) from **legitimate issuer declines**. The detection step will work from this split.
+
+## Gold grain change (update `dd8da74e`, 2026-11-21, decision in DECISIONS.md)
+
+| t | n | attempts |
+|---|---|---|
+| gold_auth_daily | 3124425 | 10933861 |
+| gold_auth_hourly | 521871 | 10933861 |
+| silver_auth | 10933861 | 10933861 |
+
+Both gold tables sum to the same 10,933,861 attempts as `silver_auth`.
+
+INC1 is visible in `gold_auth_daily`: Meridian, ACQ-017, e-commerce, acceptance-decline rate by day.
+
+| business_date | attempts | acc_declines | cfg | acc_rate_pct |
+|---|---|---|---|---|
+| 2026-09-20 | 27 | 0 | 0 | 0.0 |
+| 2026-09-21 | 30 | 0 | 0 | 0.0 |
+| 2026-09-22 | 31 | 0 | 0 | 0.0 |
+| 2026-09-23 | 28 | 0 | 0 | 0.0 |
+| 2026-09-24 | 30 | 12 | 12 | 40.0 |
+| 2026-09-25 | 30 | 19 | 19 | 63.3 |
+| 2026-09-26 | 26 | 17 | 17 | 65.4 |
+| 2026-09-27 | 18 | 7 | 6 | 38.9 |
+| 2026-09-28 | 33 | 21 | 21 | 63.6 |
+| 2026-09-29 | 24 | 17 | 17 | 70.8 |
+| 2026-09-30 | 30 | 18 | 18 | 60.0 |
+| 2026-10-01 | 30 | 17 | 16 | 56.7 |
+| 2026-10-02 | 28 | 12 | 11 | 42.9 |
+| 2026-10-03 | 32 | 17 | 17 | 53.1 |
+| 2026-10-04 | 19 | 11 | 11 | 57.9 |
+| 2026-10-05 | 29 | 16 | 16 | 55.2 |
+| 2026-10-06 | 34 | 25 | 24 | 73.5 |
+| 2026-10-07 | 21 | 11 | 11 | 52.4 |
+| 2026-10-08 | 35 | 21 | 21 | 60.0 |
+| 2026-10-09 | 36 | 1 | 1 | 2.8 |
+| 2026-10-10 | 28 | 0 | 0 | 0.0 |
+| 2026-10-11 | 23 | 0 | 0 | 0.0 |
+
+The rate is 0% before 2026-09-24, 39–74% during the incident window, and back to about 0% after 2026-10-08. This is the answer-key window (INC1: 2026-09-24 → 10-08). It is shown here as a data check only; the detection method has not been built yet.

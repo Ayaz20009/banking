@@ -4,12 +4,41 @@
 -- T2-T5 (BUILD_PLAN.md section 5), not by this pipeline.
 -- =============================================================================
 
-CREATE OR REFRESH MATERIALIZED VIEW gold_auth_hourly
+-- Grain decision 2026-11-21 (DECISIONS.md): at prototype scale an hourly x 9-dimension grain is
+-- almost row-level (7.9M rows), too sparse to score. Detection scores the DAILY table; the small
+-- HOURLY table (network x region x channel) keeps intraday timing, e.g. a processor outage.
+
+CREATE OR REFRESH MATERIALIZED VIEW gold_auth_daily
 CLUSTER BY (business_date, network)
-COMMENT 'Authorization outcomes per local hour x wave cohort x network x acquirer x channel x MCC group x region x cross-border x tokenized x issuer segment. Attempts, approvals, declines by standard category, amounts.'
+COMMENT 'Authorization outcomes per business day x wave cohort x network x acquirer x channel x MCC group x region x cross-border x tokenized x issuer segment. Attempts, approvals, declines by standard category, amounts. The table the detection step scores.'
 AS SELECT
-  auth_hour, business_date, wave_cohort, network, acquirer_id, acquirer_name, channel, mcc_group, region,
+  business_date, wave_cohort, network, acquirer_id, acquirer_name, channel, mcc_group, region,
   cross_border, tokenized, issuer_segment,
+  count(*) AS attempts,
+  count_if(approved) AS approvals,
+  count_if(NOT approved) AS declines,
+  count_if(decline_type = 'ACCEPTANCE') AS acceptance_declines,
+  count_if(decline_type = 'ISSUER_LEGIT') AS issuer_legit_declines,
+  count_if(decline_type = 'UNMAPPED') AS unmapped_declines,
+  count_if(std_category = 'ACCEPTANCE_CONFIG') AS decl_acceptance_config,
+  count_if(std_category = 'TOKEN_PROVISIONING') AS decl_token_provisioning,
+  count_if(std_category = 'CROSS_BORDER_BLOCK') AS decl_cross_border_block,
+  count_if(std_category = 'CARD_ON_FILE_STALE') AS decl_card_on_file_stale,
+  count_if(std_category = 'PROCESSOR_TIMEOUT') AS decl_processor_timeout,
+  count_if(std_category = 'SYSTEM_ERROR') AS decl_system_error,
+  count_if(std_category = 'ISSUER_LEGIT_NSF') AS decl_insufficient_funds,
+  count_if(stip_flag) AS stip_approvals,
+  CAST(sum(amount) AS DECIMAL(16,2)) AS amount,
+  CAST(sum(CASE WHEN NOT approved THEN amount END) AS DECIMAL(16,2)) AS declined_amount,
+  max(available_ts) AS max_available_ts
+FROM silver_auth
+GROUP BY ALL;
+
+CREATE OR REFRESH MATERIALIZED VIEW gold_auth_hourly
+CLUSTER BY (auth_hour)
+COMMENT 'Hourly authorization outcomes per network x region x channel x issuer segment (intraday timing, e.g. processor timeouts).'
+AS SELECT
+  auth_hour, business_date, network, region, channel, issuer_segment,
   count(*) AS attempts,
   count_if(approved) AS approvals,
   count_if(NOT approved) AS declines,
