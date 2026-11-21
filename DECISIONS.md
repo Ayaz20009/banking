@@ -110,3 +110,11 @@
 - **Decision:** option A. `gold_auth_daily` keeps all the dimensions at day grain (the table detection scores); `gold_auth_hourly` is redefined as a small hourly table by network × region × channel × issuer segment (intraday timing).
 - **Alternatives:** (B) keep the hourly × 9-dimension table (7.9M rows) and have detection roll up itself.
 - **Why:** [REWRITE IN YOUR WORDS] At 1:270 scale the hourly grain was almost row-level, too sparse to score and slow for Genie and the App.
+
+## 2026-11-21 — Governance personas and policies (refines D4)
+- **Decision:** four personas plus ADMIN.
+  - P1 Director (OWN, all regions, card_ref masked); P2 Southeast analyst (OWN, SE, masked); P3 Card investigations (OWN, all regions, card_ref clear); P4 Partner ops (THIRD_PARTY only, masked).
+  - Entitlements live in tables (`personas`, `entitlements`); one row filter on (issuer_segment, region) and one card_ref mask.
+  - Policies apply only to the consumption tables (gold_*, new `auth_detail`); the service principal tested as P2.
+- **Alternatives:** the three D4 personas without regional scope; group-based grants (not possible: no account-admin rights to create account groups).
+- **Why:** [REWRITE IN YOUR WORDS]

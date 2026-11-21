@@ -1,0 +1,27 @@
+resources:
+  jobs:
+    febar_main:
+      name: febar_main
+      description: "End-to-end: governance -> pipeline -> tags (T0-T1). Detection, Lakebase, readiness tasks are added in later steps."
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: setup_governance
+          description: "T0: personas, entitlements, row-filter and mask functions, schema tags (idempotent)"
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/governance/governance.sql
+        - task_key: refresh_pipeline
+          description: "T1: incremental update of the Lakeflow pipeline"
+          depends_on:
+            - task_key: setup_governance
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.febar_pipeline.id}
+        - task_key: apply_tags
+          description: "T1b: tags on pipeline-owned tables (they must exist first)"
+          depends_on:
+            - task_key: refresh_pipeline
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/governance/governance_tags.sql

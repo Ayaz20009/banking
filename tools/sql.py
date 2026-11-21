@@ -5,6 +5,8 @@ import json, subprocess, sys, time
 
 WAREHOUSE = "34e45919b39491cf"
 PROFILE = "febar"
+if "--profile" in sys.argv:
+    PROFILE = sys.argv[sys.argv.index("--profile") + 1]
 
 
 def run(sql, timeout_s=600):
