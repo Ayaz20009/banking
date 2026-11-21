@@ -1,0 +1,24 @@
+resources:
+  pipelines:
+    febar_pipeline:
+      name: febar_pipeline
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      serverless: true
+      continuous: false
+      channel: CURRENT
+      configuration:
+        landing_path: /Volumes/${var.catalog}/${var.schema}/landing
+        # Fail fast while building; remove for production so transient errors are retried.
+        pipelines.numUpdateRetryAttempts: "0"
+      libraries:
+        - file:
+            path: ../src/pipeline/01_bronze.sql
+        - file:
+            path: ../src/pipeline/02_silver.sql
+        - file:
+            path: ../src/pipeline/03_manifests.py
+        - file:
+            path: ../src/pipeline/03_reconciliation.sql
+        - file:
+            path: ../src/pipeline/04_gold.sql
