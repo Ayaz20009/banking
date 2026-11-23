@@ -17,6 +17,8 @@ resources:
           default: ""
         - name: same_keys_as_run
           default: ""
+        - name: holdout_end
+          default: ""
       tasks:
         - task_key: tune_threshold
           notebook_task:
@@ -42,3 +44,4 @@ resources:
               run_label: "{{job.parameters.run_label}}"
               parts: "{{job.parameters.parts}}"
               same_keys_as_run: "{{job.parameters.same_keys_as_run}}"
+              holdout_end: "{{job.parameters.holdout_end}}"

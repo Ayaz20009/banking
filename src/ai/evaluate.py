@@ -31,16 +31,19 @@ dbutils.widgets.text("prompt_version", "v1")
 dbutils.widgets.text("run_label", "eval_v1")
 dbutils.widgets.text("parts", "detection,genai")
 dbutils.widgets.text("same_keys_as_run", "")
+dbutils.widgets.text("holdout_end", "")   # Amendment 3: supplementary run on days 41-60 after the demo replay
 JUDGE, PV, LABEL = dbutils.widgets.get("judge_endpoint"), dbutils.widgets.get("prompt_version"), dbutils.widgets.get("run_label")
 PARTS = set(dbutils.widgets.get("parts").split(","))
 SAME_KEYS = dbutils.widgets.get("same_keys_as_run").strip()
+if dbutils.widgets.get("holdout_end").strip():
+    C.HOLDOUT = (C.HOLDOUT[0], dbutils.widgets.get("holdout_end").strip())
 RUN_AT = dt.datetime.utcnow().isoformat() + "Z"
 cfg_row = spark.sql(f"SELECT * FROM {C.NS}.detector_config WHERE config_version = 'detector_v1'").first()
 CFG = json.loads(cfg_row["details"])
 T, FLOOR = CFG["threshold"], CFG["volume_floor"]
 assert CFG["frozen_at_utc"] < RUN_AT, "threshold must be frozen before evaluation"
 manifest = C.load_manifest()
-summary = {"run_label": LABEL, "run_at_utc": RUN_AT, "protocol": "v1 + A1 + A2", "detector": {k: CFG[k] for k in
+summary = {"run_label": LABEL, "run_at_utc": RUN_AT, "protocol": "v1 + A1 + A2 + A3 + Errata 1", "holdout": list(C.HOLDOUT), "detector": {k: CFG[k] for k in
            ["config_version", "threshold", "volume_floor", "frozen_at_utc"]}}
 
 # COMMAND ----------

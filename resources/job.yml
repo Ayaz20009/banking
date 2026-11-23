@@ -2,8 +2,18 @@ resources:
   jobs:
     febar_main:
       name: febar_main
-      description: "End-to-end: T0 governance -> T1 pipeline -> T1b tags -> T2 flag + explain (case representatives) -> T3 cases into Lakebase -> T4 cases back to UC"
+      description: "End-to-end: T0 governance -> T1 pipeline -> T1b tags -> T2 flag + explain (case representatives) -> T3 cases into Lakebase -> T4 cases back to UC -> T5 readiness -> T6 evidence snapshot. Starts when a complete data drop lands."
       max_concurrent_runs: 1
+      queue:
+        enabled: true          # overlapping triggers wait instead of being skipped
+      trigger:
+        pause_status: PAUSED   # decision 2026-11-23: manual runs only; file arrival never fired here (no file events on the shared external location)
+        file_arrival:
+          # The generator writes landing/drops/DROP_COMPLETE_<date>.json LAST, after every source folder
+          # of the drop has its _MANIFEST.json, so a run starts only when a whole drop is complete.
+          url: /Volumes/${var.catalog}/${var.schema}/landing/drops/
+          min_time_between_triggers_seconds: 60
+          wait_after_last_change_seconds: 60
       tasks:
         - task_key: setup_governance
           description: "T0: personas, entitlements, row-filter and mask functions, schema tags (idempotent)"
@@ -17,10 +27,16 @@ resources:
             - task_key: setup_governance
           pipeline_task:
             pipeline_id: ${resources.pipelines.febar_pipeline.id}
+        - task_key: settle_pipeline
+          description: "T1a: second pipeline update. In run 321182104220187 a materialized view (silver_auth) refreshed before its input (silver_issuer_auth) had committed, so gold lagged one drop. This update has nothing new to ingest and recomputes the views from committed inputs; evidence_snapshot checks freshness."
+          depends_on:
+            - task_key: refresh_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.febar_pipeline.id}
         - task_key: apply_tags
           description: "T1b: tags on pipeline-owned tables (they must exist first)"
           depends_on:
-            - task_key: refresh_pipeline
+            - task_key: settle_pipeline
           sql_task:
             warehouse_id: ${var.warehouse_id}
             file:
@@ -58,3 +74,9 @@ resources:
             warehouse_id: ${var.warehouse_id}
             file:
               path: ../src/serve/wave_readiness.sql
+        - task_key: evidence_snapshot
+          description: "T6: cross-check the same numbers across gold (UC), Lakebase and readiness; exit value = the snapshot"
+          depends_on:
+            - task_key: wave_readiness
+          notebook_task:
+            notebook_path: ../src/serve/evidence_snapshot.py

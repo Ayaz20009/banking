@@ -150,3 +150,9 @@
   - **Access:** gold and Genie with the user's token; Lakebase cases shown only if Unity Catalog lets the user see the case_id.
 - **Alternatives:** keep Streamlit; Flask + gunicorn; dark theme; framework default styling.
 - **Why:** [REWRITE IN YOUR WORDS]
+
+## 2026-11-23 — Job trigger: manual runs (supersedes D11 file arrival)
+- **Decision:** `febar_main` runs manually. The file-arrival trigger stays configured on `landing/drops/` (the generator writes the drop-complete marker last) but is **PAUSED**.
+- **Why it changed:** in this workspace the trigger never fired. Two real drop markers and one test marker produced no run in 20 / 20 / 6 minutes; `trigger_state` stayed null after a pause/unpause reset. The external location under the catalog has file events disabled; it is shared, so it was not changed.
+- **Alternatives:** the generator's replay job starts `febar_main` (run_job_task); ask the platform team for file events; a 15-minute schedule.
+- **Why:** [REWRITE IN YOUR WORDS]

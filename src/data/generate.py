@@ -715,6 +715,18 @@ with open(f"{TRUTH}/incident_manifest.json", "w") as fh:
     json.dump(incident_manifest, fh, indent=1)
 shutil.rmtree(f"{LANDING}/_staging/{RUN_ID}", ignore_errors=True)
 
-summary = {"mode": MODE, "replay_date": REPLAY_DATE or None, "seed": SEED, "systems": results, "answer_key": ak}
+# Drop marker: written LAST, only in replay mode, after every source folder of the day has its manifest.
+# The job's file-arrival trigger watches landing/drops/, so a run starts only when a whole drop is complete.
+drop_marker = None
+if MODE == "replay":
+    missing = [s_ for s_ in ["iss_auth", "mrd_events", "atl_daily", "merchant_master"] if REPLAY_DATE not in complete(s_)]
+    assert not missing, f"drop incomplete, no marker written: {missing}"
+    os.makedirs(f"{LANDING}/drops", exist_ok=True)
+    drop_marker = f"{LANDING}/drops/DROP_COMPLETE_{REPLAY_DATE.replace('-', '')}.json"
+    with open(drop_marker, "w") as fh:
+        json.dump({"business_date": REPLAY_DATE, "written_at_utc": dt.datetime.utcnow().isoformat() + "Z",
+                   "systems": [r_ for r_ in results if r_.get("written")]}, fh)
+
+summary = {"mode": MODE, "replay_date": REPLAY_DATE or None, "seed": SEED, "systems": results, "drop_marker": drop_marker, "answer_key": ak}
 print(json.dumps(summary, indent=1, default=str))
 dbutils.notebook.exit(json.dumps(summary, default=str))
