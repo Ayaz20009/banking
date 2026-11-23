@@ -118,3 +118,11 @@
   - Policies apply only to the consumption tables (gold_*, new `auth_detail`); the service principal tested as P2.
 - **Alternatives:** the three D4 personas without regional scope; group-based grants (not possible: no account-admin rights to create account groups).
 - **Why:** [REWRITE IN YOUR WORDS]
+
+## 2026-11-23 — Intelligent step and evaluation amendment
+- **Decision:** option A (D7 confirmed).
+  - An explainable 0–100 score per Meridian slice-day, from five named components: excess, impact, clarity, breadth, persistence.
+  - Five slice families: acquirer × channel, MCC group × cross-border, region, channel, card segment.
+  - `ai_query` explains the top flagged items only; judges come from a different model family. EVAL_PROTOCOL Amendment 2 (daily grain, own-history expected rate, 50% overlap rule).
+- **Alternatives:** (B) a trained model; (C) A plus `ai_classify` on config notes.
+- **Why:** [REWRITE IN YOUR WORDS]
