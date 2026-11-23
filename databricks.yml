@@ -18,8 +18,11 @@ variables:
     description: Serverless SQL warehouse (Serverless Starter Warehouse)
     default: 34e45919b39491cf
   llm_endpoint:
-    description: Foundation model endpoint for ai_query explanations
-    default: databricks-claude-sonnet-5-5
+    description: Foundation model endpoint for ai_query explanations (json_schema structured output + temperature verified 2026-11-23)
+    default: databricks-claude-sonnet-4-6
+  judge_endpoint:
+    description: Judge model for MLflow GenAI evaluation (different model family from the generator)
+    default: databricks-gpt-5-4
   lakebase_project:
     description: Lakebase Autoscaling project for the case store
     default: febar-ops

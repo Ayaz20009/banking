@@ -45,10 +45,15 @@ AS SELECT * EXCEPT (amount_raw, auth_ts_raw) FROM STREAM(v_issuer_parsed);
 -- Deduplicate re-sent records on the business key: keep the latest landed copy.
 CREATE OR REFRESH MATERIALIZED VIEW silver_issuer_auth
 CLUSTER BY (business_date)
-COMMENT 'Issuer authorization attempts, cleaned and deduplicated. One row per AUTH_ID (latest landed copy).'
-AS SELECT *
-FROM stg_issuer_auth
-QUALIFY row_number() OVER (PARTITION BY auth_id ORDER BY _file_created_ts DESC, _ingested_at DESC, _source_file DESC) = 1;
+COMMENT 'Issuer authorization attempts, cleaned and deduplicated. One row per AUTH_ID (latest landed copy). first_available_ts = when the FIRST copy landed (used by the as-of timing rule).'
+AS SELECT * EXCEPT (rn)
+FROM (
+  SELECT *,
+    min(_file_created_ts) OVER (PARTITION BY auth_id) AS first_available_ts,
+    row_number() OVER (PARTITION BY auth_id ORDER BY _file_created_ts DESC, _ingested_at DESC, _source_file DESC) AS rn
+  FROM stg_issuer_auth
+)
+WHERE rn = 1;
 
 -- ---------- Quarantine: every DROP-ROW failure, with reason -----------------
 CREATE OR REFRESH STREAMING TABLE quarantine_auth (
@@ -260,7 +265,7 @@ base AS (
     coalesce(n.stip_flag, false) AS stip_flag, n.processing_path, n.token_requestor_id,
     n.auth_id IS NOT NULL AS network_response_found,
     n.merchant_id_norm = m.mrd_mid_norm AS merchant_id_match,
-    greatest(i._file_created_ts, n._file_created_ts) AS available_ts,
+    greatest(i.first_available_ts, n._file_created_ts) AS available_ts,   -- when this row was knowable
     i._source_file
   FROM silver_issuer_auth i
   LEFT JOIN silver_network_response n ON n.auth_id = i.auth_id

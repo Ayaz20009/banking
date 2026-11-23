@@ -1,0 +1,52 @@
+{
+ "frozen": {
+  "config_version": "detector_v1",
+  "threshold": 45,
+  "volume_floor": 0,
+  "frozen_at_utc": "2026-11-23T06:37:57.166940Z",
+  "protocol": "v1 + A1 + A2",
+  "grid_size": 430,
+  "configs_meeting_80pct_precision": 319
+ },
+ "tuning_metrics": {
+  "method": "method",
+  "split": "2026-09-21..2026-10-30",
+  "flags": 42,
+  "hits": 42,
+  "precision": 1.0,
+  "precision_wilson95": [
+   0.9161983874908382,
+   1.0
+  ],
+  "incidents": [
+   "INC1",
+   "INC2"
+  ],
+  "incidents_caught": [
+   "INC1",
+   "INC2"
+  ],
+  "incident_recall": 1.0,
+  "decoy_flags": 0,
+  "per_incident": {
+   "INC1": {
+    "caught": true,
+    "first_flag": "2026-09-24",
+    "delay_days": 0,
+    "incident_days_flagged": "15/15",
+    "root_cause_first_flag": "ACCEPTANCE_CONFIG",
+    "root_cause_matches": true
+   },
+   "INC2": {
+    "caught": true,
+    "first_flag": "2026-10-12",
+    "delay_days": 0,
+    "incident_days_flagged": "9/9",
+    "root_cause_first_flag": "CROSS_BORDER_BLOCK",
+    "root_cause_matches": true
+   }
+  },
+  "incident_day_recall": 1.0
+ },
+ "newly_frozen": true
+}

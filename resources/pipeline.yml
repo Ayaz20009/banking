@@ -22,3 +22,5 @@ resources:
             path: ../src/pipeline/03_reconciliation.sql
         - file:
             path: ../src/pipeline/04_gold.sql
+        - file:
+            path: ../src/pipeline/05_scores.sql
