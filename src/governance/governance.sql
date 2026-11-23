@@ -29,10 +29,10 @@ CREATE TABLE IF NOT EXISTS personas (
 MERGE INTO personas t
 USING (SELECT * FROM VALUES
   ('ADMIN',        'Platform owner (pipelines, jobs)',          'ALL',         'ALL', true,  'Owns and runs the pipeline and jobs; needs every row to compute results'),
-  ('P1_DIRECTOR',  'Director of Payment Network Operations',    'OWN',         'ALL', false, 'Network-wide view of the bank''s own portfolio; no cardholder identifiers'),
+  ('P1_DIRECTOR',  'Director of Payment Network Operations',    'OWN',         'ALL', false, 'Network-wide view of the bank\'s own portfolio; no cardholder identifiers'),
   ('P2_REGIONAL',  'Regional ops analyst (Southeast)',          'OWN',         'SE',  false, 'Investigates incidents in one region'),
   ('P3_CARD_INV',  'Card investigations specialist (cleared)',  'OWN',         'ALL', true,  'Needs card identifiers to fix card-on-file and token issues'),
-  ('P4_PARTNER',   'Network partner operations',                'THIRD_PARTY', 'ALL', false, 'Serves third-party issuers on the network; never sees the bank''s own portfolio')
+  ('P4_PARTNER',   'Network partner operations',                'THIRD_PARTY', 'ALL', false, 'Serves third-party issuers on the network; never sees the bank\'s own portfolio')
   AS v(persona, title, issuer_scope, region_scope, can_see_sensitive, purpose)) s
 ON t.persona = s.persona
 WHEN MATCHED THEN UPDATE SET *

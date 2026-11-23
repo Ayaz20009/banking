@@ -19,7 +19,8 @@ dbutils.widgets.text("llm_endpoint", "databricks-claude-sonnet-4-6")
 dbutils.widgets.text("prompt_version", "v1")
 dbutils.widgets.text("top_n", "60")
 dbutils.widgets.text("from_date", "2026-09-21")
-EP, PV, TOP_N, FROM_D = (dbutils.widgets.get(k) for k in ["llm_endpoint", "prompt_version", "top_n", "from_date"])
+dbutils.widgets.text("only_keys_from_run", "")
+EP, PV, TOP_N, FROM_D, ONLY_KEYS = (dbutils.widgets.get(k).strip() for k in ["llm_endpoint", "prompt_version", "top_n", "from_date", "only_keys_from_run"])
 
 cfg = spark.sql(f"SELECT threshold, volume_floor FROM {C.NS}.detector_config WHERE config_version = 'detector_v1'").first()
 T, FLOOR = cfg["threshold"], cfg["volume_floor"]
@@ -49,7 +50,7 @@ USING (
   SELECT s.*, 'detector_v1' AS detector_version,
     to_json(named_struct(
       'business_date', CAST(s.business_date AS STRING),
-      'card_issuer_segment', CASE s.issuer_segment WHEN 'OWN' THEN 'the bank''s own cards' ELSE 'third-party issuers'' cards processed on the network' END,
+      'card_issuer_segment', CASE s.issuer_segment WHEN 'OWN' THEN 'cards issued by this bank' ELSE 'cards of third-party issuers processed on the network' END,
       'slice_type', s.family, 'slice', s.slice_value, 'network', 'acquired network (cards already migrated)',
       'attempts', s.attempts, 'acceptance_declines', s.acc_declines,
       'expected_acceptance_declines', round(s.expected_declines, 1), 'excess_declines', round(s.excess_declines, 1),
@@ -68,7 +69,16 @@ USING (
       'acquirer', CASE WHEN s.family = 'ACQUIRER_CHANNEL' THEN named_struct(
           'name', a.acquirer_name,
           'last_configuration_change', CASE WHEN a.last_config_change <= s.business_date THEN CAST(a.last_config_change AS STRING) END,
-          'configuration_note', CASE WHEN a.last_config_change <= s.business_date THEN a.config_note END) END
+          'configuration_note', CASE WHEN a.last_config_change <= s.business_date THEN a.config_note END) END,
+      'glossary', named_struct(
+          'attempts', 'card authorization attempts',
+          'acceptance_declines', 'declines caused on the network or acquirer side (not the issuer credit decision); fixable',
+          'acquired network', 'the payment network the bank acquired; cards in this slice have already been migrated to it',
+          'slice_types', 'ACQUIRER_CHANNEL = acquirer and channel; MCC_GROUP_XB = merchant category group and domestic or cross-border; REGION = merchant region; CHANNEL = channel; CARD_SEGMENT = cardholder spending segment',
+          'channels', 'CP = card present; ECOM = e-commerce; REC = recurring or card-on-file charges; MANUAL = key-entered',
+          'regions', 'NE, SE, MW, SW, W = US regions; INTL = merchants outside the US',
+          'z_score', 'how unusual the acceptance declines are versus the same slice in the prior 28 days',
+          'estimated_lost_spend_usd', 'excess declines x average ticket x share of spend not recovered')
     )) AS facts
   FROM {C.NS}.gold_anomaly_scores s
   LEFT JOIN {C.NS}.silver_acquirers a ON s.family = 'ACQUIRER_CHANNEL' AND a.acquirer_id = split(s.slice_value, ' / ')[0]
@@ -111,7 +121,18 @@ Rules:
 FACTS:
 """,
 }
-PROMPTS["v2"] = PROMPTS["v1"]  # placeholder; replaced during the single iteration if needed
+# v2 (single iteration, 2026-11-23): judge failures showed invented mechanics (systems, processes,
+# data fields, deadlines) and number reformatting. The facts now carry a glossary.
+PROMPTS["v2"] = PROMPTS["v1"].replace("FACTS:\n", """- Describe the likely cause ONLY in the words of the decline category description given in the facts. Do not add
+  mechanisms, systems, processes, data fields, files, deadlines or parties that are not in the facts
+  (for example: no "pipeline", "account updater", "PAN", "token vault", "end of business").
+- You may use the glossary wording for codes (e.g. REC = recurring or card-on-file charges).
+- Copy every number exactly as it is written in the facts (no reformatting, no new percentages, ratios or totals).
+- next_step: name the owner team and what to check, using only items in the facts (slice, date, decline categories,
+  merchant count, acquirer name and configuration change if given).
+
+FACTS:
+""")
 PROMPT = PROMPTS[PV]
 
 SCHEMA = {
@@ -139,6 +160,7 @@ spark.sql(f"""CREATE TABLE IF NOT EXISTS {C.NS}.anomaly_explanations (
 todo = spark.sql(f"""
   SELECT a.anomaly_key, a.business_date, a.facts FROM {C.NS}.gold_anomalies a
   WHERE a.business_date >= '{FROM_D}'
+    {"AND a.anomaly_key IN (SELECT DISTINCT anomaly_key FROM " + C.NS + ".eval_judge_results WHERE run_label = '" + ONLY_KEYS + "')" if ONLY_KEYS else ""}
     AND NOT EXISTS (SELECT 1 FROM {C.NS}.anomaly_explanations e WHERE e.anomaly_key = a.anomaly_key AND e.prompt_version = '{PV}')
   ORDER BY a.business_date DESC, a.score DESC LIMIT {int(TOP_N)}""")
 todo.createOrReplaceTempView("todo")

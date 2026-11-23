@@ -15,7 +15,7 @@
 
 CREATE OR REFRESH MATERIALIZED VIEW gold_anomaly_scores
 CLUSTER BY (business_date, family)
-COMMENT 'Explainable anomaly score (0-100) per Meridian slice-day: excess acceptance declines vs the slice''s own prior-28-day rate, with named point components, drivers, likely root cause and owner team. Row filter by persona (region-family rows carry their region; other families carry ALL).'
+COMMENT 'Explainable anomaly score (0-100) per Meridian slice-day: excess acceptance declines vs the slice\'s own prior-28-day rate, with named point components, drivers, likely root cause and owner team. Row filter by persona (region-family rows carry their region; other families carry ALL).'
 WITH ROW FILTER classic_stable_zjnu75_catalog.network_migration.f_row_filter ON (issuer_segment, region)
 AS
 WITH base AS (

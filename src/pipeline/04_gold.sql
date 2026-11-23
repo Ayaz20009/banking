@@ -131,7 +131,7 @@ CREATE OR REFRESH MATERIALIZED VIEW auth_detail (
   wave_cohort STRING COMMENT 'W1..W6 = migration wave of the card (migrated); BASELINE = not yet migrated',
   card_ref STRING MASK classic_stable_zjnu75_catalog.network_migration.f_mask_card COMMENT 'Cardholder card reference. SENSITIVE: shown only to personas cleared for sensitive fields; otherwise RESTRICTED',
   card_segment STRING COMMENT 'Card spending segment (DOMESTIC, ECOM_HEAVY, RECURRING_HEAVY, WALLET_HEAVY, INTL_TRAVELER)',
-  issuer_segment STRING COMMENT 'OWN = the bank''s cards; THIRD_PARTY = other issuers'' cards processed on the network (commercially sensitive)',
+  issuer_segment STRING COMMENT 'OWN = the bank\'s cards; THIRD_PARTY = other issuers\' cards processed on the network (commercially sensitive)',
   merchant_num STRING COMMENT 'Merchant number (issuer view)',
   dba_name STRING COMMENT 'Merchant trading name',
   acquirer_id STRING COMMENT 'Acquirer (merchant bank / processor)',

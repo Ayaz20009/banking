@@ -42,7 +42,7 @@ def incident_labels(spark):
              CASE WHEN t.cause = 'DECOY_NSF' THEN 'DECOY' ELSE t.cause END AS incident, count(*) AS incident_rows
       FROM {NS}.silver_auth s JOIN truth_causes t ON t.AUTH_ID = s.auth_id
       {FAMILIES_SQL}
-      WHERE s.network = 'MRD' AND NOT s.approved AND {ON_TIME}
+      WHERE s.network = 'MRD' AND s.decline_type = 'ACCEPTANCE' AND {ON_TIME}   -- Errata 1: excess = acceptance declines
       GROUP BY ALL""")
     baseline = spark.sql(f"""
       SELECT s.business_date, s.acquirer_id,

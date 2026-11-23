@@ -11,6 +11,12 @@ resources:
           default: eval_v1
         - name: parts
           default: "detection,genai"
+        - name: top_n
+          default: "60"
+        - name: only_keys_from_run
+          default: ""
+        - name: same_keys_as_run
+          default: ""
       tasks:
         - task_key: tune_threshold
           notebook_task:
@@ -23,7 +29,8 @@ resources:
             base_parameters:
               llm_endpoint: ${var.llm_endpoint}
               prompt_version: "{{job.parameters.prompt_version}}"
-              top_n: "60"
+              top_n: "{{job.parameters.top_n}}"
+              only_keys_from_run: "{{job.parameters.only_keys_from_run}}"
         - task_key: evaluate
           depends_on:
             - task_key: explain_anomalies
@@ -34,3 +41,4 @@ resources:
               prompt_version: "{{job.parameters.prompt_version}}"
               run_label: "{{job.parameters.run_label}}"
               parts: "{{job.parameters.parts}}"
+              same_keys_as_run: "{{job.parameters.same_keys_as_run}}"

@@ -30,8 +30,10 @@ dbutils.widgets.text("judge_endpoint", "databricks-gpt-5-4")
 dbutils.widgets.text("prompt_version", "v1")
 dbutils.widgets.text("run_label", "eval_v1")
 dbutils.widgets.text("parts", "detection,genai")
+dbutils.widgets.text("same_keys_as_run", "")
 JUDGE, PV, LABEL = dbutils.widgets.get("judge_endpoint"), dbutils.widgets.get("prompt_version"), dbutils.widgets.get("run_label")
 PARTS = set(dbutils.widgets.get("parts").split(","))
+SAME_KEYS = dbutils.widgets.get("same_keys_as_run").strip()
 RUN_AT = dt.datetime.utcnow().isoformat() + "Z"
 cfg_row = spark.sql(f"SELECT * FROM {C.NS}.detector_config WHERE config_version = 'detector_v1'").first()
 CFG = json.loads(cfg_row["details"])
@@ -103,16 +105,12 @@ NUM = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
 
 def numbers(text):
-    return {n.replace(",", "").lstrip("0") or "0" for n in NUM.findall(text or "")}
+    """Numbers as values rounded to 2 decimals (Errata 1: compare values, not text)."""
+    return {round(float(n.replace(",", "")), 2) for n in NUM.findall(text or "") if n.replace(",", "").replace(".", "").isdigit()}
 
 
 def fact_numbers(facts):
-    out = numbers(facts)
-    for n in list(out):          # allow integer rendering of decimals given in the facts (e.g. 4.0 -> 4)
-        if "." in n:
-            out.add(n.split(".")[0] or "0")
-            out.add(n.rstrip("0").rstrip("."))
-    return out
+    return numbers(facts)
 
 
 if "genai" in PARTS:
@@ -125,6 +123,7 @@ if "genai" in PARTS:
       SELECT anomaly_key, business_date, facts, llm_raw, llm_error, summary, likely_cause, certainty, next_step, owner_team, facts_used
       FROM {C.NS}.anomaly_explanations
       WHERE prompt_version = '{PV}' AND business_date BETWEEN '{C.HOLDOUT[0]}' AND '{C.HOLDOUT[1]}'
+        {"AND anomaly_key IN (SELECT DISTINCT anomaly_key FROM " + C.NS + ".eval_judge_results WHERE run_label = '" + SAME_KEYS + "')" if SAME_KEYS else ""}
       QUALIFY row_number() OVER (PARTITION BY anomaly_key ORDER BY explained_at DESC) = 1
       ORDER BY xxhash64(anomaly_key, 20261120) LIMIT 30""").collect()
     data, rule_rows = [], []
@@ -175,7 +174,7 @@ if "genai" in PARTS:
                 judge_rows.append((LABEL, PV, rr["anomaly_key"], name, str(val), rat, JUDGE, RUN_AT))
     for rr in rule_rows:
         judge_rows.append((LABEL, PV, rr["anomaly_key"], "rule_numbers_grounded", "yes" if rr["rule_numbers_grounded"] else "no",
-                           "unsupported numbers: " + ", ".join(rr["unsupported_numbers"]) if rr["unsupported_numbers"] else "all numbers found in facts",
+                           "unsupported numbers: " + ", ".join(str(x) for x in rr["unsupported_numbers"]) if rr["unsupported_numbers"] else "all numbers found in facts",
                            "rule", RUN_AT))
         judge_rows.append((LABEL, PV, rr["anomaly_key"], "rule_cause_matches", "yes" if rr["rule_cause_matches"] else "no",
                            "likely_cause vs dominant_category", "rule", RUN_AT))

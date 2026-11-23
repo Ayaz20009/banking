@@ -100,3 +100,8 @@ Approved by the submitter. No score, flag or evaluation result existed when this
 Approved by the submitter. The threshold was frozen at 06:37:57Z on tuning days only (commit d1c553f); nothing had been scored or inspected on held-out days.
 - **Held out for the primary result = window days 41–58 (2026-10-31 → 2026-11-17).** Days 59–60 (2026-11-18/19) are reserved for the live "new data arrives" demo and are not landed yet. They contain no planted incident (INC3 ends 11-12, INC4 ends 11-16, the decoy ends 11-08), so they can only add false-positive opportunities.
 - After the demo replay lands days 59–60, the evaluation is rerun on days 41–60 and reported as a **supplementary** result. The primary result is kept unchanged.
+
+### Errata 1: 2026-11-23 (after run `eval_v1`; `eval_v1` results kept unchanged in `eval_runs`)
+Two defects in the evaluation **code** contradicted the text above. They are corrected, and the corrected run is `eval_v1b`. The protocol is unchanged.
+1. **Method hit labels** counted all planted declines in a slice-day, including the decoy's legitimate insufficient-funds declines. Amendment 2 defines a hit by the slice-day's *excess acceptance declines*, and decoy rows can never be acceptance declines. Corrected: method labels count planted rows with `decline_type = 'ACCEPTANCE'` only. Baseline labels are unchanged: the baseline's excess covers all declines.
+2. **Rule-based number check (§5 a)** compared numbers as text, so `256.00` in an explanation did not match `256.0` in the facts. Corrected: numbers are compared as values (equal to 2 decimals).

@@ -163,7 +163,7 @@ FROM STREAM(v_atl_parsed) WHERE auth_id IS NULL;
 CREATE OR REFRESH MATERIALIZED VIEW silver_merchants (
   CONSTRAINT r11_merchant_num_not_null EXPECT (merchant_num IS NOT NULL) ON VIOLATION FAIL UPDATE
 )
-COMMENT 'Merchant master, latest record per merchant, with both networks'' merchant IDs normalised to integers for matching.'
+COMMENT 'Merchant master, latest record per merchant, with both networks\' merchant IDs normalised to integers for matching.'
 AS SELECT
   trim(MRCH_NUM) AS merchant_num,
   trim(DBA_NAME) AS dba_name,                                   -- trailing spaces removed
