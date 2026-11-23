@@ -13,7 +13,7 @@ TRUTH = f"/Volumes/{CAT}/{SCH}/landing/_generator_truth"
 
 WINDOW = ("2026-09-21", "2026-11-19")
 TUNING = ("2026-09-21", "2026-10-30")      # evaluation-window days 1-40
-HOLDOUT = ("2026-10-31", "2026-11-19")     # evaluation-window days 41-60
+HOLDOUT = ("2026-10-31", "2026-11-17")     # window days 41-58 (Amendment 3; days 59-60 reserved for the live demo)
 
 # Timing rule: day D is scored at D+1 07:00 with rows landed by then.
 ON_TIME = "available_ts <= CAST(date_add(business_date, 1) AS TIMESTAMP) + INTERVAL 7 HOURS"

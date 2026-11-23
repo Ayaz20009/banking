@@ -126,3 +126,8 @@
   - `ai_query` explains the top flagged items only; judges come from a different model family. EVAL_PROTOCOL Amendment 2 (daily grain, own-history expected rate, 50% overlap rule).
 - **Alternatives:** (B) a trained model; (C) A plus `ai_classify` on config notes.
 - **Why:** [REWRITE IN YOUR WORDS]
+
+## 2026-11-23 — Held-out days vs the live demo
+- **Decision:** the primary held-out result uses window days 41–58; days 59–60 stay unlanded for the live demo, with a supplementary rerun on 41–60 afterwards (EVAL_PROTOCOL Amendment 3).
+- **Alternatives:** land 11-18/19 now and evaluate 41–60 exactly as written (loses the live demo days).
+- **Why:** [REWRITE IN YOUR WORDS]
