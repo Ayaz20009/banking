@@ -20,6 +20,7 @@ dbutils.widgets.text("prompt_version", "v1")
 dbutils.widgets.text("top_n", "60")
 dbutils.widgets.text("from_date", "2026-09-21")
 dbutils.widgets.text("only_keys_from_run", "")
+dbutils.widgets.text("representatives_only", "false")
 EP, PV, TOP_N, FROM_D, ONLY_KEYS = (dbutils.widgets.get(k).strip() for k in ["llm_endpoint", "prompt_version", "top_n", "from_date", "only_keys_from_run"])
 
 cfg = spark.sql(f"SELECT threshold, volume_floor FROM {C.NS}.detector_config WHERE config_version = 'detector_v1'").first()
@@ -70,6 +71,25 @@ USING (
           'name', a.acquirer_name,
           'last_configuration_change', CASE WHEN a.last_config_change <= s.business_date THEN CAST(a.last_config_change AS STRING) END,
           'configuration_note', CASE WHEN a.last_config_change <= s.business_date THEN a.config_note END) END,
+      'playbook_for_dominant_category', CASE s.likely_root_cause
+          WHEN 'ACCEPTANCE_CONFIG' THEN array(
+            'Acquirer Relations: contact the acquirer in this slice to confirm its acceptance profile for this channel on the acquired network, citing its last configuration change if one is given',
+            'Acquirer Relations: send the acquirer the list of merchants in this slice with acceptance declines on this date')
+          WHEN 'TOKEN_PROVISIONING' THEN array(
+            'Card Technology: check token provisioning status for the cards declined in this slice on this date',
+            'Card Technology: re-provision the tokens that failed for the affected cards')
+          WHEN 'CROSS_BORDER_BLOCK' THEN array(
+            'Network Integration: check whether cross-border acceptance is enabled on the acquired network for the merchant category group in this slice',
+            'Network Integration: confirm with the network team whether the block is intended and, if not, request it is lifted')
+          WHEN 'CARD_ON_FILE_STALE' THEN array(
+            'Card Technology: pull the list of merchants in this slice with stored-credential declines on this date',
+            'Card Technology: send those merchants refreshed stored credentials for the reissued cards')
+          WHEN 'PROCESSOR_TIMEOUT' THEN array(
+            'Network Operations: check processor response times on the acquired network for this slice and date',
+            'Network Operations: open an incident with the processing team for this slice if timeouts continue')
+          WHEN 'SYSTEM_ERROR' THEN array(
+            'Network Operations: check acquired-network system errors for this slice and date',
+            'Network Operations: escalate to the network team if errors continue the next day') END,
       'glossary', named_struct(
           'attempts', 'card authorization attempts',
           'acceptance_declines', 'declines caused on the network or acquirer side (not the issuer credit decision); fixable',
@@ -133,6 +153,13 @@ PROMPTS["v2"] = PROMPTS["v1"].replace("FACTS:\n", """- Describe the likely cause
 
 FACTS:
 """)
+# v3 (second iteration, approved 2026-11-23): v2 made next steps generic. The facts now carry a short
+# playbook of standard checks for the dominant category (written by the team, not the model).
+PROMPTS["v3"] = PROMPTS["v2"].replace("""- next_step: name the owner team and what to check, using only items in the facts (slice, date, decline categories,
+  merchant count, acquirer name and configuration change if given).""", """- next_step: pick the most fitting action from playbook_for_dominant_category and make it specific with items from the
+  facts (slice, date, decline categories, merchant count, acquirer name and configuration change if given).
+  Do not add actions, systems or parties that are not in the playbook or the facts.""")
+assert PROMPTS["v3"] != PROMPTS["v2"]
 PROMPT = PROMPTS[PV]
 
 SCHEMA = {
@@ -157,10 +184,16 @@ spark.sql(f"""CREATE TABLE IF NOT EXISTS {C.NS}.anomaly_explanations (
   owner_team STRING, facts_used ARRAY<STRING>, explained_at TIMESTAMP)
   COMMENT 'Append-only history of LLM explanations per anomaly and prompt version (before/after comparisons).'""")
 
+REPS = dbutils.widgets.get("representatives_only").strip().lower() == "true"
+if REPS:   # explain the top flag of every case (view defined in src/serve/case_flags_view.sql)
+    import os as _os
+    _p = _os.path.join(_os.path.dirname(_os.path.dirname("/Workspace" + dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get())), "serve", "case_flags_view.sql")
+    spark.sql("\n".join(l for l in open(_p).read().splitlines() if not l.strip().startswith("--")))
 todo = spark.sql(f"""
   SELECT a.anomaly_key, a.business_date, a.facts FROM {C.NS}.gold_anomalies a
   WHERE a.business_date >= '{FROM_D}'
     {"AND a.anomaly_key IN (SELECT DISTINCT anomaly_key FROM " + C.NS + ".eval_judge_results WHERE run_label = '" + ONLY_KEYS + "')" if ONLY_KEYS else ""}
+    {"AND a.anomaly_key IN (SELECT anomaly_key FROM " + C.NS + ".gold_case_flags WHERE is_representative)" if REPS else ""}
     AND NOT EXISTS (SELECT 1 FROM {C.NS}.anomaly_explanations e WHERE e.anomaly_key = a.anomaly_key AND e.prompt_version = '{PV}')
   ORDER BY a.business_date DESC, a.score DESC LIMIT {int(TOP_N)}""")
 todo.createOrReplaceTempView("todo")

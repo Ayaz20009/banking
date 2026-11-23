@@ -131,3 +131,8 @@
 - **Decision:** the primary held-out result uses window days 41–58; days 59–60 stay unlanded for the live demo, with a supplementary rerun on 41–60 afterwards (EVAL_PROTOCOL Amendment 3).
 - **Alternatives:** land 11-18/19 now and evaluate 41–60 exactly as written (loses the live demo days).
 - **Why:** [REWRITE IN YOUR WORDS]
+
+## 2026-11-23 — Lakebase case store design
+- **Decision:** one case per episode (same root cause + issuer segment, gap ≤ 1 day). Statuses OPEN, CLAIMED, IN_PROGRESS, WAITING_PARTNER, RESOLVED, DISMISSED; resolution codes ACQUIRER_FIX, CONFIG_CHANGE, CREDENTIAL_REFRESH, PROCESSOR_FIX, FALSE_POSITIVE, OTHER; severity HIGH if max score ≥ 70. Job-task upsert (machine columns only) plus history events; T4 copies cases back to UC. Cases carry the v3 explanation (second iteration approved).
+- **Alternatives:** one case per flagged anomaly (254 cases, noisy); a synced table (read-only in Postgres).
+- **Why:** [REWRITE IN YOUR WORDS]

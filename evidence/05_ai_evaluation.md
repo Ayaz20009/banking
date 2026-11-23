@@ -108,3 +108,22 @@ Every judge verdict and rationale, for all three runs, is in `eval_judge_results
 
 ## 4. Before / after in one line
 **v1** was concrete but invented mechanics. **v2** is grounded but too generic. Neither prompt is clean on both. Which version to use in production, or whether to run a second iteration, is open for the submitter (see BUILD_LOG / DECISIONS).
+
+
+## 5. Second iteration, v3 (approved by the submitter 2026-11-23): playbook in the facts
+
+- **Change:** the facts gain `playbook_for_dominant_category`, two standard checks per root cause written by the team. The prompt asks the model to pick the most fitting check and make it specific with facts. Run `eval_v3`, MLflow run `502a6c985e9d480d9d9cc6e51d6b6ace`, same 30 keys, same judges.
+
+| Judge | v1 (`eval_v1b`) | v2 | **v3** |
+|---|---|---|---|
+| `grounded_in_facts` | 0/30 | 0/30 | 1/30 |
+| `cause_agreement` | 30/30 | 30/30 | 30/30 |
+| `actionable_next_step` | 29/30 | 22/30 | 23/30 |
+| `no_invented_data` | 0/30 | 4/30 | 9/30 |
+| `rule_numbers_grounded` | 30/30 | 30/30 | 30/30 |
+| `rule_cause_matches` | 30/30 | 30/30 | 30/30 |
+
+- **Result:** v3 is the most grounded version (no_invented 9/30; v1's invented mechanics are gone). Actionability barely recovered (23/30).
+- **Why the actionability failures:** the model **joins both playbook actions** ("check processor response times … and, if timeouts continue, open an incident"), which breaks the judge's "one concrete action" rule. **The judge is right.**
+- **No third iteration was run.** v3 is used for the cases (`ops.cases.llm_next_step`).
+- **Remaining weakness, stated openly:** explanation quality has not met the bar; the 90% grounding no-claim threshold is met only by the rule check (30/30), not by the LLM judges.

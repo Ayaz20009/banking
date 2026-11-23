@@ -2,7 +2,7 @@ resources:
   jobs:
     febar_main:
       name: febar_main
-      description: "End-to-end: governance -> pipeline -> tags (T0-T1). Detection, Lakebase, readiness tasks are added in later steps."
+      description: "End-to-end: T0 governance -> T1 pipeline -> T1b tags -> T2 flag + explain (case representatives) -> T3 cases into Lakebase -> T4 cases back to UC"
       max_concurrent_runs: 1
       tasks:
         - task_key: setup_governance
@@ -25,3 +25,28 @@ resources:
             warehouse_id: ${var.warehouse_id}
             file:
               path: ../src/governance/governance_tags.sql
+        - task_key: explain_anomalies
+          description: "T2: flag anomalies (frozen threshold) and explain each case's top flag with ai_query"
+          depends_on:
+            - task_key: apply_tags
+          notebook_task:
+            notebook_path: ../src/ai/explain_anomalies.py
+            base_parameters:
+              llm_endpoint: ${var.llm_endpoint}
+              prompt_version: v3
+              top_n: "60"
+              representatives_only: "true"
+        - task_key: sync_cases
+          description: "T3: upsert cases into Lakebase ops.cases (machine columns only; human edits survive), history events"
+          depends_on:
+            - task_key: explain_anomalies
+          notebook_task:
+            notebook_path: ../src/serve/sync_cases.py
+            base_parameters:
+              prompt_version: v3
+        - task_key: sync_cases_back
+          description: "T4: Lakebase ops.cases -> UC gold_case_status (row filter by persona)"
+          depends_on:
+            - task_key: sync_cases
+          notebook_task:
+            notebook_path: ../src/serve/sync_cases_back.py
