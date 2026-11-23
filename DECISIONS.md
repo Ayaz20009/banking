@@ -136,3 +136,8 @@
 - **Decision:** one case per episode (same root cause + issuer segment, gap ≤ 1 day). Statuses OPEN, CLAIMED, IN_PROGRESS, WAITING_PARTNER, RESOLVED, DISMISSED; resolution codes ACQUIRER_FIX, CONFIG_CHANGE, CREDENTIAL_REFRESH, PROCESSOR_FIX, FALSE_POSITIVE, OTHER; severity HIGH if max score ≥ 70. Job-task upsert (machine columns only) plus history events; T4 copies cases back to UC. Cases carry the v3 explanation (second iteration approved).
 - **Alternatives:** one case per flagged anomaly (254 cases, noisy); a synced table (read-only in Postgres).
 - **Why:** [REWRITE IN YOUR WORDS]
+
+## 2026-11-23 — Genie benchmarks and readiness rule
+- **Decision:** benchmark questions 1, 3, 4, 7, 8, 13, 14, 15 (of 15 proposed). Readiness option A: a wave segment is GO only if its migrated approval gap over the last 14 days is ≤ 0.3 pp and no HIGH-severity case is open; at-risk volume = expected daily attempts × gap.
+- **Alternatives:** a weighted 0–100 readiness score (GO ≥ 80).
+- **Why:** [REWRITE IN YOUR WORDS]

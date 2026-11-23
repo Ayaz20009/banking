@@ -50,3 +50,11 @@ resources:
             - task_key: sync_cases
           notebook_task:
             notebook_path: ../src/serve/sync_cases_back.py
+        - task_key: wave_readiness
+          description: "T5: wave readiness gate (GO only if segment gap <= 0.3 pp and no open HIGH case) + at-risk volume"
+          depends_on:
+            - task_key: sync_cases_back
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ../src/serve/wave_readiness.sql

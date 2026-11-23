@@ -1,0 +1,913 @@
+{
+ "benchmarks": {
+  "questions": [
+   {
+    "answer": [
+     {
+      "content": [
+       "SELECT round(sum(lost_spend), 2) AS lost_spend_usd, round(sum(excess_declines), 1) AS excess_declines\n",
+       "FROM classic_stable_zjnu75_catalog.network_migration.gold_baseline_gap\n",
+       "WHERE business_date > (SELECT date_sub(max(business_date), 30) FROM classic_stable_zjnu75_catalog.network_migration.gold_baseline_gap)"
+      ],
+      "format": "SQL"
+     }
+    ],
+    "id": "ec390815ead5a82556a9c9ad1e489992",
+    "question": [
+     "How much spend did we lose to excess declines on migrated cards in the last 30 days?"
+    ]
+   },
+   {
+    "answer": [
+     {
+      "content": [
+       "SELECT card_segment, round(sum(expected_daily_attempts), 1) AS expected_daily_attempts,\n",
+       "       round(sum(at_risk_declines_per_day), 2) AS at_risk_declines_per_day, round(sum(at_risk_spend_usd_per_day), 2) AS at_risk_spend_usd_per_day\n",
+       "FROM classic_stable_zjnu75_catalog.network_migration.gold_wave_readiness WHERE wave_id = 7 GROUP BY card_segment ORDER BY at_risk_spend_usd_per_day DESC"
+      ],
+      "format": "SQL"
+     }
+    ],
+    "id": "e84114cc6612d94b25a343590029eede",
+    "question": [
+     "How much transaction volume in wave 7 is at risk, by card segment?"
+    ]
+   },
+   {
+    "answer": [
+     {
+      "content": [
+       "SELECT round(100 * sum(migrated_approvals) / sum(migrated_attempts), 2) AS migrated_approval_rate_pct,\n",
+       "       round(100 * sum(expected_approvals) / sum(migrated_attempts), 2) AS matched_baseline_approval_rate_pct,\n",
+       "       round(100 * (sum(expected_approvals) - sum(migrated_approvals)) / sum(migrated_attempts), 2) AS gap_pp\n",
+       "FROM classic_stable_zjnu75_catalog.network_migration.gold_baseline_gap\n",
+       "WHERE business_date > (SELECT date_sub(max(business_date), 30) FROM classic_stable_zjnu75_catalog.network_migration.gold_baseline_gap)"
+      ],
+      "format": "SQL"
+     }
+    ],
+    "id": "c6a84f0a10a2dba34dcdad061f89f0ef",
+    "question": [
+     "What was the approval rate for migrated cards vs the matched legacy baseline over the last 30 days, and the gap in percentage points?"
+    ]
+   },
+   {
+    "answer": [
+     {
+      "content": [
+       "SELECT network, round(100 * sum(acceptance_declines) / sum(attempts), 2) AS acceptance_decline_rate_pct, sum(attempts) AS attempts\n",
+       "FROM classic_stable_zjnu75_catalog.network_migration.gold_auth_daily\n",
+       "WHERE mcc_group = 'TRAVEL_LODGING' AND cross_border\n",
+       "  AND business_date > (SELECT date_sub(max(business_date), 60) FROM classic_stable_zjnu75_catalog.network_migration.gold_auth_daily)\n",
+       "GROUP BY network ORDER BY network"
+      ],
+      "format": "SQL"
+     }
+    ],
+    "id": "9dfdee504df13803cf6efbd60feed628",
+    "question": [
+     "What is the acceptance-decline rate for cross-border travel and lodging on the acquired network vs the legacy network over the last 60 days?"
+    ]
+   },
+   {
+    "answer": [
+     {
+      "content": [
+       "SELECT card_segment, issuer_segment, gate, gate_reason\n",
+       "FROM classic_stable_zjnu75_catalog.network_migration.gold_wave_readiness WHERE wave_id = 7 ORDER BY issuer_segment, card_segment"
+      ],
+      "format": "SQL"
+     }
+    ],
+    "id": "3bec73e0d7bc92c726f44373d731e86d",
+    "question": [
+     "Is wave 7 ready to launch? Show the gate result and the reason for each card segment."
+    ]
+   },
+   {
+    "answer": [
+     {
+      "content": [
+       "SELECT CASE WHEN business_date < '2026-09-24' THEN '1_before' WHEN business_date <= '2026-10-08' THEN '2_during' ELSE '3_after' END AS period,\n",
+       "       round(100 * sum(acceptance_declines) / sum(attempts), 2) AS acceptance_decline_rate_pct, sum(attempts) AS attempts\n",
+       "FROM classic_stable_zjnu75_catalog.network_migration.gold_auth_daily\n",
+       "WHERE network = 'MRD' AND acquirer_id = 'ACQ-017' AND channel = 'ECOM' AND business_date BETWEEN '2026-09-10' AND '2026-10-22'\n",
+       "GROUP BY 1 ORDER BY 1"
+      ],
+      "format": "SQL"
+     }
+    ],
+    "id": "32addabdecbd243f15a264a0fbc21a8c",
+    "question": [
+     "How did ACQ-017's e-commerce acceptance-decline rate on the acquired network change before, during and after 24 September to 8 October 2026?"
+    ]
+   },
+   {
+    "answer": [
+     {
+      "content": [
+       "SELECT network, max(business_date) AS latest_business_date,\n",
+       "       count(DISTINCT CASE WHEN business_date > (SELECT date_sub(max(business_date), 30) FROM classic_stable_zjnu75_catalog.network_migration.gold_auth_daily) THEN business_date END) AS days_with_data_last_30\n",
+       "FROM classic_stable_zjnu75_catalog.network_migration.gold_auth_daily GROUP BY network ORDER BY network"
+      ],
+      "format": "SQL"
+     }
+    ],
+    "id": "2f64753c92545addc85698736eea0be0",
+    "question": [
+     "What is the latest business date loaded for each network, and on how many of the last 30 days do we have acquired-network data?"
+    ]
+   },
+   {
+    "answer": [
+     {
+      "content": [
+       "SELECT acquirer_id, acquirer_name, sum(acceptance_declines) AS acceptance_declines\n",
+       "FROM classic_stable_zjnu75_catalog.network_migration.gold_auth_daily\n",
+       "WHERE network = 'MRD' AND business_date > (SELECT date_sub(max(business_date), 14) FROM classic_stable_zjnu75_catalog.network_migration.gold_auth_daily)\n",
+       "GROUP BY acquirer_id, acquirer_name ORDER BY acceptance_declines DESC LIMIT 5"
+      ],
+      "format": "SQL"
+     }
+    ],
+    "id": "0f407307093732c9d6c3a7df21edc271",
+    "question": [
+     "What are the top 5 acquirers by acceptance declines on the acquired network in the last 14 days?"
+    ]
+   }
+  ]
+ },
+ "config": {
+  "sample_questions": [
+   {
+    "id": "3e73ab54fcf8fb7e887c07dde35fbb19",
+    "question": [
+     "What is the approval gap for migrated cards vs the matched baseline over the last 30 days?"
+    ]
+   },
+   {
+    "id": "4b7041bd2b5720da9ba55bd726189bc6",
+    "question": [
+     "Which acquirers had the most acceptance declines on the acquired network in the last 14 days?"
+    ]
+   },
+   {
+    "id": "67b25659f5311d6f98a0cd011c2ab49a",
+    "question": [
+     "How many HIGH-severity cases are open, and who owns them?"
+    ]
+   },
+   {
+    "id": "ba765f0364ffd1975b2405862dd2e436",
+    "question": [
+     "Is wave 7 ready to launch?"
+    ]
+   },
+   {
+    "id": "fac80cf78689a7ec8c3e2f97f8fa4771",
+    "question": [
+     "How much spend did we lose to excess declines in the last 30 days?"
+    ]
+   }
+  ]
+ },
+ "data_sources": {
+  "tables": [
+   {
+    "column_configs": [
+     {
+      "column_name": "breadth_points",
+      "exclude": true
+     },
+     {
+      "column_name": "business_date",
+      "description": [
+       "Day the anomaly was flagged for"
+      ]
+     },
+     {
+      "column_name": "clarity_points",
+      "exclude": true
+     },
+     {
+      "column_name": "detector_version",
+      "exclude": true
+     },
+     {
+      "column_name": "drivers",
+      "description": [
+       "Why it was flagged, in words"
+      ]
+     },
+     {
+      "column_name": "excess_declines",
+      "description": [
+       "Acceptance declines above expected"
+      ]
+     },
+     {
+      "column_name": "excess_points",
+      "exclude": true
+     },
+     {
+      "column_name": "explained_at",
+      "exclude": true
+     },
+     {
+      "column_name": "exposure_usd",
+      "description": [
+       "Estimated lost spend of this flag, USD"
+      ]
+     },
+     {
+      "column_name": "facts",
+      "exclude": true
+     },
+     {
+      "column_name": "family",
+      "description": [
+       "Slice type: ACQUIRER_CHANNEL, MCC_GROUP_XB, REGION, CHANNEL, CARD_SEGMENT"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "flagged_at",
+      "exclude": true
+     },
+     {
+      "column_name": "impact_points",
+      "exclude": true
+     },
+     {
+      "column_name": "issuer_segment",
+      "description": [
+       "OWN = cards issued by this bank; THIRD_PARTY = other issuers' cards processed on the network"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "likely_root_cause",
+      "description": [
+       "Likely root cause from the dominant acceptance-decline category"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "llm_error",
+      "exclude": true
+     },
+     {
+      "column_name": "llm_facts_used",
+      "exclude": true
+     },
+     {
+      "column_name": "llm_model",
+      "exclude": true
+     },
+     {
+      "column_name": "llm_next_step",
+      "description": [
+       "AI-drafted next step"
+      ]
+     },
+     {
+      "column_name": "llm_raw",
+      "exclude": true
+     },
+     {
+      "column_name": "llm_summary",
+      "description": [
+       "AI-drafted explanation (likely cause, not confirmed)"
+      ]
+     },
+     {
+      "column_name": "owner_team",
+      "description": [
+       "Suggested owner team"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "persistence_points",
+      "exclude": true
+     },
+     {
+      "column_name": "prompt_version",
+      "exclude": true
+     },
+     {
+      "column_name": "region",
+      "description": [
+       "Merchant region: NE, SE, MW, SW, W (US) or INTL (outside the US); ALL when the row is not regional"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "score",
+      "description": [
+       "Explainable anomaly score 0-100 (flagged when >= 45); higher = more unusual and costly"
+      ],
+      "synonyms": [
+       "anomaly score"
+      ]
+     },
+     {
+      "column_name": "score_version",
+      "exclude": true
+     },
+     {
+      "column_name": "slice_value",
+      "description": [
+       "The slice, e.g. 'ACQ-017 / ECOM'"
+      ]
+     }
+    ],
+    "identifier": "classic_stable_zjnu75_catalog.network_migration.gold_anomalies"
+   },
+   {
+    "column_configs": [
+     {
+      "column_name": "acceptance_declines",
+      "description": [
+       "Declines caused on the network or acquirer side (acceptance failures, fixable); excludes legitimate issuer declines"
+      ],
+      "synonyms": [
+       "acceptance failures",
+       "network declines"
+      ]
+     },
+     {
+      "column_name": "acquirer_id",
+      "description": [
+       "Acquirer (merchant bank / processor) code, e.g. ACQ-017"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "acquirer_name",
+      "description": [
+       "Acquirer name"
+      ]
+     },
+     {
+      "column_name": "amount",
+      "description": [
+       "Attempted amount, USD"
+      ]
+     },
+     {
+      "column_name": "approvals",
+      "description": [
+       "Approved attempts (including network stand-in approvals)"
+      ]
+     },
+     {
+      "column_name": "attempts",
+      "description": [
+       "Number of authorization attempts"
+      ]
+     },
+     {
+      "column_name": "business_date",
+      "description": [
+       "Business day of the authorization attempts"
+      ]
+     },
+     {
+      "column_name": "channel",
+      "description": [
+       "CP = card present, ECOM = e-commerce, REC = recurring / card-on-file, MANUAL = key-entered"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true,
+      "synonyms": [
+       "e-commerce",
+       "recurring",
+       "card present"
+      ]
+     },
+     {
+      "column_name": "cross_border",
+      "description": [
+       "TRUE when the merchant is outside the US"
+      ],
+      "synonyms": [
+       "international",
+       "cross-border"
+      ]
+     },
+     {
+      "column_name": "decl_acceptance_config",
+      "description": [
+       "Acceptance declines: acceptance profile not configured or rejected"
+      ]
+     },
+     {
+      "column_name": "decl_card_on_file_stale",
+      "description": [
+       "Acceptance declines: stored card credential not updated after reissue"
+      ]
+     },
+     {
+      "column_name": "decl_cross_border_block",
+      "description": [
+       "Acceptance declines: cross-border not enabled"
+      ]
+     },
+     {
+      "column_name": "decl_insufficient_funds",
+      "description": [
+       "Legitimate insufficient-funds declines"
+      ]
+     },
+     {
+      "column_name": "decl_processor_timeout",
+      "description": [
+       "Acceptance declines: issuer or switch timed out"
+      ]
+     },
+     {
+      "column_name": "decl_system_error",
+      "description": [
+       "Acceptance declines: network system error"
+      ]
+     },
+     {
+      "column_name": "decl_token_provisioning",
+      "description": [
+       "Acceptance declines: token not provisioned"
+      ]
+     },
+     {
+      "column_name": "declined_amount",
+      "description": [
+       "Declined amount, USD"
+      ]
+     },
+     {
+      "column_name": "declines",
+      "description": [
+       "Declined attempts (all reasons)"
+      ]
+     },
+     {
+      "column_name": "issuer_legit_declines",
+      "description": [
+       "Legitimate issuer declines (insufficient funds, fraud, expired card...)"
+      ]
+     },
+     {
+      "column_name": "issuer_segment",
+      "description": [
+       "OWN = cards issued by this bank; THIRD_PARTY = other issuers' cards processed on the network"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "max_available_ts",
+      "exclude": true
+     },
+     {
+      "column_name": "mcc_group",
+      "description": [
+       "Merchant category group, e.g. TRAVEL_LODGING (airlines, hotels, car rental, travel agencies), FOOD_GROCERY, RETAIL, DIGITAL, BILLS"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true,
+      "synonyms": [
+       "merchant category",
+       "travel and lodging"
+      ]
+     },
+     {
+      "column_name": "network",
+      "description": [
+       "MRD = the acquired network (migrated cards); ATL = the legacy network"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true,
+      "synonyms": [
+       "acquired network",
+       "legacy network",
+       "new network",
+       "old network"
+      ]
+     },
+     {
+      "column_name": "region",
+      "description": [
+       "Merchant region: NE, SE, MW, SW, W (US) or INTL (outside the US); ALL when the row is not regional"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "stip_approvals",
+      "description": [
+       "Approvals made by network stand-in because the issuer was unreachable"
+      ]
+     },
+     {
+      "column_name": "tokenized",
+      "description": [
+       "TRUE when a wallet or card-on-file token was used"
+      ]
+     },
+     {
+      "column_name": "unmapped_declines",
+      "description": [
+       "Declines whose network code is not in the code map"
+      ]
+     },
+     {
+      "column_name": "wave_cohort",
+      "description": [
+       "W1..W6 = migration wave of the card (card already migrated to the acquired network); BASELINE = card not yet migrated"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     }
+    ],
+    "identifier": "classic_stable_zjnu75_catalog.network_migration.gold_auth_daily"
+   },
+   {
+    "column_configs": [
+     {
+      "column_name": "baseline_attempts",
+      "exclude": true
+     },
+     {
+      "column_name": "baseline_level",
+      "exclude": true
+     },
+     {
+      "column_name": "business_date",
+      "description": [
+       "Business day"
+      ]
+     },
+     {
+      "column_name": "card_segment",
+      "description": [
+       "Cardholder spending segment"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "excess_declines",
+      "description": [
+       "Extra declines on migrated cards vs the matched baseline = expected_approvals - migrated_approvals"
+      ]
+     },
+     {
+      "column_name": "expected_approvals",
+      "description": [
+       "Approvals the migrated cards would have had at the matched legacy baseline rate"
+      ]
+     },
+     {
+      "column_name": "gap_pp",
+      "description": [
+       "Approval gap of this row in percentage points (do not average across rows; recompute from sums)"
+      ]
+     },
+     {
+      "column_name": "issuer_segment",
+      "description": [
+       "OWN = cards issued by this bank; THIRD_PARTY = other issuers' cards processed on the network"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "lost_spend",
+      "description": [
+       "Estimated lost spend, USD = excess declines x average ticket x share of spend not recovered (Finance assumption)"
+      ],
+      "synonyms": [
+       "lost spend",
+       "lost purchase volume"
+      ]
+     },
+     {
+      "column_name": "match_segment",
+      "description": [
+       "Matching key: card segment | channel | merchant category group | DOM/XB"
+      ]
+     },
+     {
+      "column_name": "matched_baseline_rate",
+      "description": [
+       "Legacy-network approval rate of comparable cards (same day, card segment, channel, merchant category group, cross-border)"
+      ]
+     },
+     {
+      "column_name": "migrated_approval_rate",
+      "description": [
+       "Approval rate of migrated cards in this row"
+      ]
+     },
+     {
+      "column_name": "migrated_approvals",
+      "description": [
+       "Approvals on migrated cards"
+      ]
+     },
+     {
+      "column_name": "migrated_attempts",
+      "description": [
+       "Attempts on migrated cards in this segment and day"
+      ]
+     },
+     {
+      "column_name": "region",
+      "description": [
+       "Merchant region: NE, SE, MW, SW, W (US) or INTL (outside the US); ALL when the row is not regional"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "unmatched_baseline_rate",
+      "description": [
+       "Legacy-network approval rate of all cards that day (not matched)"
+      ]
+     },
+     {
+      "column_name": "unmatched_gap_pp",
+      "description": [
+       "Gap vs the unmatched baseline (for comparison only)"
+      ]
+     },
+     {
+      "column_name": "unrecovered_rate",
+      "exclude": true
+     },
+     {
+      "column_name": "wave_cohort",
+      "description": [
+       "Migrated wave cohort W1..W6"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     }
+    ],
+    "identifier": "classic_stable_zjnu75_catalog.network_migration.gold_baseline_gap"
+   },
+   {
+    "column_configs": [
+     {
+      "column_name": "case_id",
+      "description": [
+       "Case number"
+      ]
+     },
+     {
+      "column_name": "case_key",
+      "exclude": true
+     },
+     {
+      "column_name": "exposure_usd",
+      "description": [
+       "Estimated lost spend of the case, USD"
+      ]
+     },
+     {
+      "column_name": "issuer_segment",
+      "description": [
+       "OWN = cards issued by this bank; THIRD_PARTY = other issuers' cards processed on the network"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "machine_refreshed_at",
+      "exclude": true
+     },
+     {
+      "column_name": "owner_team",
+      "description": [
+       "Team that owns the case"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "recovered_spend_usd",
+      "description": [
+       "Spend recovered after the fix, USD (entered by analysts)"
+      ]
+     },
+     {
+      "column_name": "region_scope",
+      "description": [
+       "Region of the case (ALL when not regional)"
+      ]
+     },
+     {
+      "column_name": "root_cause",
+      "description": [
+       "Likely root cause of the case"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "severity",
+      "description": [
+       "HIGH (max anomaly score >= 70) or MEDIUM"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "status",
+      "description": [
+       "OPEN, CLAIMED, IN_PROGRESS, WAITING_PARTNER, RESOLVED or DISMISSED (RESOLVED and DISMISSED are closed)"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "version",
+      "exclude": true
+     }
+    ],
+    "identifier": "classic_stable_zjnu75_catalog.network_migration.gold_case_status"
+   },
+   {
+    "column_configs": [
+     {
+      "column_name": "at_risk_declines_per_day",
+      "description": [
+       "Expected extra declines per day if migrated today"
+      ],
+      "synonyms": [
+       "at-risk volume",
+       "at risk transactions"
+      ]
+     },
+     {
+      "column_name": "at_risk_spend_usd_per_day",
+      "description": [
+       "Expected lost spend per day if migrated today, USD"
+      ],
+      "synonyms": [
+       "at-risk spend"
+      ]
+     },
+     {
+      "column_name": "card_segment",
+      "description": [
+       "Cardholder spending segment"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "computed_at",
+      "exclude": true
+     },
+     {
+      "column_name": "expected_daily_attempts",
+      "description": [
+       "Daily authorization attempts of the wave's cards (today, on the legacy network)"
+      ]
+     },
+     {
+      "column_name": "gate",
+      "description": [
+       "GO or HOLD for this wave and card segment"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "gate_reason",
+      "description": [
+       "Why GO or HOLD, in words"
+      ]
+     },
+     {
+      "column_name": "issuer_segment",
+      "description": [
+       "OWN = cards issued by this bank; THIRD_PARTY = other issuers' cards processed on the network"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "region",
+      "description": [
+       "Merchant region: NE, SE, MW, SW, W (US) or INTL (outside the US); ALL when the row is not regional"
+      ],
+      "enable_entity_matching": true,
+      "enable_format_assistance": true
+     },
+     {
+      "column_name": "segment_gap_pp_14d",
+      "description": [
+       "Approval gap of already-migrated cards in the same card segment, last 14 days, percentage points"
+      ]
+     },
+     {
+      "column_name": "wave_id",
+      "description": [
+       "Upcoming migration wave number (7-10)"
+      ]
+     }
+    ],
+    "identifier": "classic_stable_zjnu75_catalog.network_migration.gold_wave_readiness"
+   }
+  ]
+ },
+ "instructions": {
+  "example_question_sqls": [
+   {
+    "id": "2ffc919c73d3dafd5ae14964b99fc0d9",
+    "question": [
+     "Compare ACQ-001's recurring acceptance-decline rate before and after 2 November 2026 on the acquired network."
+    ],
+    "sql": [
+     "SELECT CASE WHEN business_date < '2026-11-02' THEN '1_before' ELSE '2_after' END AS period, round(100 * sum(acceptance_declines) / sum(attempts), 2) AS acceptance_decline_rate_pct, sum(attempts) AS attempts FROM classic_stable_zjnu75_catalog.network_migration.gold_auth_daily WHERE network = 'MRD' AND acquirer_id = 'ACQ-001' AND channel = 'REC' AND business_date BETWEEN '2026-10-19' AND '2026-11-15' GROUP BY 1 ORDER BY 1"
+    ]
+   },
+   {
+    "id": "3fb5dae59cbb59beb3a08bc9cccf0bfd",
+    "question": [
+     "What is the acceptance-decline rate by channel on the acquired network over the last 7 days?"
+    ],
+    "sql": [
+     "SELECT channel, round(100 * sum(acceptance_declines) / sum(attempts), 2) AS acceptance_decline_rate_pct, sum(attempts) AS attempts FROM classic_stable_zjnu75_catalog.network_migration.gold_auth_daily WHERE network = 'MRD' AND business_date > (SELECT date_sub(max(business_date), 7) FROM classic_stable_zjnu75_catalog.network_migration.gold_auth_daily) GROUP BY channel ORDER BY acceptance_decline_rate_pct DESC"
+    ]
+   },
+   {
+    "id": "c586ec92a3e55ddf2baf360fa0355524",
+    "question": [
+     "Which segments of wave 8 are on hold and why?"
+    ],
+    "sql": [
+     "SELECT card_segment, issuer_segment, gate, gate_reason, round(at_risk_spend_usd_per_day, 2) AS at_risk_spend_usd_per_day FROM classic_stable_zjnu75_catalog.network_migration.gold_wave_readiness WHERE wave_id = 8 AND gate = 'HOLD' ORDER BY at_risk_spend_usd_per_day DESC"
+    ]
+   },
+   {
+    "id": "e233cf4b06b59ede3ebfad753260196c",
+    "question": [
+     "Show the approval gap vs the matched baseline by wave cohort for the last 14 days."
+    ],
+    "sql": [
+     "SELECT wave_cohort, round(100 * (sum(expected_approvals) - sum(migrated_approvals)) / sum(migrated_attempts), 2) AS gap_pp, sum(migrated_attempts) AS migrated_attempts FROM classic_stable_zjnu75_catalog.network_migration.gold_baseline_gap WHERE business_date > (SELECT date_sub(max(business_date), 14) FROM classic_stable_zjnu75_catalog.network_migration.gold_baseline_gap) GROUP BY wave_cohort ORDER BY wave_cohort"
+    ]
+   }
+  ],
+  "join_specs": [
+   {
+    "id": "886b26d3beaed81e59158069ec9eeb21",
+    "left": {
+     "alias": "gold_wave_readiness",
+     "identifier": "classic_stable_zjnu75_catalog.network_migration.gold_wave_readiness"
+    },
+    "right": {
+     "alias": "gold_baseline_gap",
+     "identifier": "classic_stable_zjnu75_catalog.network_migration.gold_baseline_gap"
+    },
+    "sql": [
+     "`gold_wave_readiness`.`card_segment` = `gold_baseline_gap`.`card_segment` AND `gold_wave_readiness`.`issuer_segment` = `gold_baseline_gap`.`issuer_segment`",
+     "--rt=FROM_RELATIONSHIP_TYPE_MANY_TO_MANY--"
+    ]
+   },
+   {
+    "id": "ff9e47e551d60bcb602d9d4b9dbf9d38",
+    "left": {
+     "alias": "gold_auth_daily",
+     "identifier": "classic_stable_zjnu75_catalog.network_migration.gold_auth_daily"
+    },
+    "right": {
+     "alias": "gold_baseline_gap",
+     "identifier": "classic_stable_zjnu75_catalog.network_migration.gold_baseline_gap"
+    },
+    "sql": [
+     "`gold_auth_daily`.`business_date` = `gold_baseline_gap`.`business_date` AND `gold_auth_daily`.`wave_cohort` = `gold_baseline_gap`.`wave_cohort`",
+     "--rt=FROM_RELATIONSHIP_TYPE_MANY_TO_MANY--"
+    ]
+   }
+  ],
+  "text_instructions": [
+   {
+    "content": [
+     "PURPOSE: answer questions from the VP of Payment Network Integration and the Director of Payment Network Operations about card authorization acceptance during the migration of cards to the acquired payment network, incidents (cases) and readiness of upcoming migration waves. Data is synthetic.NETWORKS: network 'MRD' = the acquired network (cards already migrated). network 'ATL' = the legacy network. 'Migrated cards' = network = 'MRD'.TIME: 'last N days' means the N business days ending at the LATEST business_date in the table being queried (business_date > date_sub(max(business_date), N)), never current_date(). Data is daily; there is no hourly detail.RATES: always compute rates as ratios of sums: approval rate = SUM(approvals)/SUM(attempts); acceptance-decline rate = SUM(acceptance_declines)/SUM(attempts). Never average a rate column across rows. Show rates as percentages rounded to 2 decimals.APPROVAL GAP vs MATCHED BASELINE: use gold_baseline_gap. Migrated approval rate = SUM(migrated_approvals)/SUM(migrated_attempts); matched baseline approval rate = SUM(expected_approvals)/SUM(migrated_attempts); gap in percentage points = 100*(SUM(expected_approvals)-SUM(migrated_approvals))/SUM(migrated_attempts). Positive gap = migrated cards approve less.LOST SPEND: SUM(gold_baseline_gap.lost_spend) in USD (net of segments where migrated cards did better). It is lost purchase volume, NOT bank revenue.ACCEPTANCE vs ISSUER: acceptance_declines are network/acquirer-side failures (fixable). issuer_legit_declines are the issuer's legitimate decisions (insufficient funds, fraud...). Questions about acceptance problems use acceptance_declines only.READINESS: use gold_wave_readiness. A wave segment is GO only if segment_gap_pp_14d <= 0.3 pp AND there are no open HIGH-severity cases; otherwise HOLD. 'At risk' = at_risk_declines_per_day (transactions) and at_risk_spend_usd_per_day (USD), summed over the segments asked about.CASES: open = status NOT IN ('RESOLVED','DISMISSED'). Rank cases by exposure_usd. Rank acquirers or slices by the measure asked (e.g. acceptance_declines), descending, and show the top N asked for.COMPLETENESS: the latest data date is MAX(business_date); a day 'has data' for a network when it has attempts for that network.BEFORE / DURING / AFTER a period: 'before' = the 14 days immediately before the period's first day; 'after' = the 14 days immediately after its last day; 'during' = the period itself (inclusive). Label the buckets 1_before, 2_during, 3_after.READINESS GATE answers (GO/HOLD, gate_reason): show one row per card_segment AND issuer_segment (OWN vs THIRD_PARTY), because the gate is computed per issuer segment.AT-RISK VOLUME answers: group only by the dimension asked (e.g. 'by card segment' = GROUP BY card_segment, summing OWN and THIRD_PARTY together) and show SUM(expected_daily_attempts), SUM(at_risk_declines_per_day) and SUM(at_risk_spend_usd_per_day).DO NOT: answer about individual cardholders or card numbers (not in these tables); invent figures; forecast beyond the data; or name people. AI-drafted explanations (llm_summary, llm_next_step) are likely causes, not confirmed facts; say so if you quote them."
+    ],
+    "id": "294968ac789ddff36584979eccbe8a2b"
+   }
+  ]
+ },
+ "version": 2
+}
