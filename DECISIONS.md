@@ -141,3 +141,12 @@
 - **Decision:** benchmark questions 1, 3, 4, 7, 8, 13, 14, 15 (of 15 proposed). Readiness option A: a wave segment is GO only if its migrated approval gap over the last 14 days is ≤ 0.3 pp and no HIGH-severity case is open; at-risk volume = expected daily attempts × gap.
 - **Alternatives:** a weighted 0–100 readiness score (GO ≥ 80).
 - **Why:** [REWRITE IN YOUR WORDS]
+
+## 2026-11-23 — App framework, look and screens (changes D10)
+- **Decision:**
+  - **Framework:** FastAPI + Jinja on uvicorn (replaces D10 Streamlit).
+  - **Look:** clean neutral (white, one slate accent, status colours only for GO/HOLD and severity, no logos).
+  - **Screens:** Overview (VP), Priority list (Director), Case view (analyst acts), Ask Genie.
+  - **Access:** gold and Genie with the user's token; Lakebase cases shown only if Unity Catalog lets the user see the case_id.
+- **Alternatives:** keep Streamlit; Flask + gunicorn; dark theme; framework default styling.
+- **Why:** [REWRITE IN YOUR WORDS]

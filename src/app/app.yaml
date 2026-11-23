@@ -1,0 +1,12 @@
+command: ["python", "app.py"]
+env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+  - name: GENIE_SPACE_ID
+    valueFrom: genie-space
+  - name: LAKEBASE_ENDPOINT
+    value: "projects/febar-ops/branches/production/endpoints/primary"
+  - name: UC_CATALOG
+    value: "classic_stable_zjnu75_catalog"
+  - name: UC_SCHEMA
+    value: "network_migration"

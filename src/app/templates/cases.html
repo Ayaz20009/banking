@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block body %}
+<h1>Priority list</h1>
+<p class="sub">Cases ranked by severity, then estimated lost spend. Each case groups the flagged anomalies with the same likely cause on consecutive days.
+  Showing {{ rows|length }} {{ 'open' if show=='open' else '' }} case(s) of the {{ n_allowed }} your access allows ·
+  {% if show=='open' %}<a href="/cases?show=all">show closed too</a>{% else %}<a href="/cases">open only</a>{% endif %}</p>
+<table><tr><th>#</th><th>Severity</th><th>Likely cause</th><th>Cards</th><th>Days</th><th class="r">Flags</th><th class="r">Est. lost spend</th><th>Why it was flagged</th><th>Owner</th><th>Status</th></tr>
+{% for c in rows %}<tr>
+<td><a href="/cases/{{ c.case_id }}">{{ c.case_id }}</a></td><td><span class="pill {{ c.severity }}">{{ c.severity }}</span></td>
+<td><a href="/cases/{{ c.case_id }}">{{ c.root_cause.replace('_',' ').title() }}</a></td><td>{{ c.issuer_segment }}{% if c.region_scope!='ALL' %} · {{ c.region_scope }}{% endif %}</td>
+<td>{{ c.episode_start }} → {{ c.episode_end }}</td><td class="r">{{ c.n_flags }}</td><td class="r">{{ c.exposure_usd|money }}</td>
+<td class="muted">{{ (c.top_slices or [])[:3]|join(' · ') }}</td><td>{{ c.owner_team }}</td>
+<td><span class="st">{{ c.status }}</span>{% if c.assignee %}<br><span class="muted">{{ c.assignee }}</span>{% endif %}</td></tr>
+{% else %}<tr><td colspan="10" class="muted">No cases visible with your access.</td></tr>{% endfor %}</table>
+{% endblock %}
+{% block source %}Data from: ops.cases (Lakebase, live) limited to the case_ids Unity Catalog lets you see in gold_case_status{% endblock %}

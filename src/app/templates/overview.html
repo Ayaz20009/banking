@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% block body %}
+<h1>Migration overview</h1>
+<p class="sub">Last 30 days to {{ kpi.latest_date }} · migrated cards on the acquired network compared with similar cards still on the legacy network.</p>
+<div class="tiles">
+  <div class="tile"><div class="k">Approval gap vs matched baseline</div><div class="v">{{ kpi.gap_pp|num(2) }} pp</div>
+    <div class="n">{{ kpi.migrated_rate|pct }} migrated vs {{ kpi.baseline_rate|pct }} baseline · limit 0.30 pp</div></div>
+  <div class="tile"><div class="k">Lost spend (excess declines)</div><div class="v">{{ kpi.lost_spend|money }}</div>
+    <div class="n">{{ kpi.excess_declines|num }} extra declines on {{ kpi.migrated_attempts|num }} attempts</div></div>
+  <div class="tile"><div class="k">Open cases</div><div class="v">{{ cases.open_cases|num }}</div>
+    <div class="n">{{ cases.open_high|num }} HIGH severity · {{ cases.open_exposure|money }} exposure</div></div>
+  <div class="tile"><div class="k">Wave 7 gate</div><div class="v"><span class="pill {{ gate }}">{{ gate }}</span></div>
+    <div class="n">{{ at_risk|money }} per day at risk if migrated today</div></div>
+</div>
+
+<h2>Wave 7 readiness by segment</h2>
+<table><tr><th>Card segment</th><th>Issuer</th><th>Gate</th><th>Why</th><th class="r">Daily attempts</th><th class="r">At-risk declines/day</th><th class="r">At-risk spend/day</th></tr>
+{% for r in ready %}<tr><td>{{ r.card_segment }}</td><td>{{ r.issuer_segment }}</td><td><span class="pill {{ r.gate }}">{{ r.gate }}</span></td>
+<td>{{ r.gate_reason }}</td><td class="r">{{ r.expected_daily_attempts|num(1) }}</td><td class="r">{{ r.at_risk_declines_per_day|num(2) }}</td><td class="r">{{ r.at_risk_spend_usd_per_day|money }}</td></tr>
+{% else %}<tr><td colspan="7" class="muted">No readiness rows visible with your access.</td></tr>{% endfor %}</table>
+<p class="muted">Gate rule: GO only if the segment's approval gap on migrated cards over the last 14 days is ≤ 0.3 pp and no HIGH-severity case is open.</p>
+
+<h2>How these numbers were produced</h2>
+<div class="journey">
+  <div class="step"><b>1 · Raw files</b>Issuer, two networks, merchants, cards, acquirers land in a Unity Catalog volume</div><span class="arrow">→</span>
+  <div class="step"><b>2 · Lakeflow pipeline</b>Quality rules, quarantine, two networks conformed, file reconciliation</div><span class="arrow">→</span>
+  <div class="step"><b>3 · Governed gold</b>{{ journey.attempts|num }} attempts in {{ journey.daily_rows|num }} daily rows you can see, to {{ journey.latest_date }}</div><span class="arrow">→</span>
+  <div class="step"><b>4 · Score + AI</b>{{ journey.flags|num }} flagged anomalies, explained by an LLM</div><span class="arrow">→</span>
+  <div class="step"><b>5 · Cases (Lakebase)</b>{{ journey.cases|num }} cases worked by analysts</div><span class="arrow">→</span>
+  <div class="step"><b>6 · Readiness</b>{{ journey.readiness_rows|num }} wave × segment gates</div>
+</div>
+{% endblock %}
+{% block source %}Data from: gold_baseline_gap, gold_wave_readiness, gold_case_status, gold_auth_daily, gold_anomalies (Unity Catalog){% endblock %}

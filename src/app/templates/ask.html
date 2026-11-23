@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block body %}
+<h1>Ask Genie</h1>
+<p class="sub">Plain-English questions over the governed gold tables. Genie runs the SQL with your identity, so you only get answers from data you are allowed to see.</p>
+<form method="post" action="/ask"><input name="question" style="width:75%" value="{{ question or '' }}" placeholder="Ask a question"> <button>Ask</button></form>
+<p>{% for s in starters %}<form class="inline" method="post" action="/ask"><input type="hidden" name="question" value="{{ s }}"><button class="secondary">{{ s }}</button></form>{% endfor %}</p>
+{% if answer %}
+  <div class="box ai"><b>Genie</b> <span class="muted">({{ answer.status }})</span><p>{{ answer.text or answer.error or 'No text answer.' }}</p></div>
+  {% if answer.columns %}<table><tr>{% for c in answer.columns %}<th>{{ c }}</th>{% endfor %}</tr>
+  {% for r in answer.rows %}<tr>{% for v in r %}<td>{{ v if v is not none else '' }}</td>{% endfor %}</tr>{% endfor %}</table>{% endif %}
+  {% if answer.sql %}<h2>SQL Genie ran</h2><pre>{{ answer.sql }}</pre>{% endif %}
+{% endif %}
+{% endblock %}
+{% block source %}Data from: Genie space "Network migration: acceptance and readiness" over gold_auth_daily, gold_baseline_gap, gold_anomalies, gold_case_status, gold_wave_readiness{% endblock %}

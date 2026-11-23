@@ -1,0 +1,24 @@
+resources:
+  apps:
+    febar_app:
+      name: ${var.app_name}
+      description: "Acceptance Risk Control: overview, priority list, case workbench, Ask Genie"
+      source_code_path: ../src/app
+      user_api_scopes:
+        - sql
+        - genie
+      resources:
+        - name: sql-warehouse
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+        - name: genie-space
+          genie_space:
+            name: "Network migration: acceptance and readiness"
+            space_id: ${var.genie_space_id}
+            permission: CAN_RUN
+        - name: database
+          postgres:
+            branch: ${var.lakebase_branch}
+            database: ${var.lakebase_database}
+            permission: CAN_CONNECT_AND_CREATE

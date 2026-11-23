@@ -26,6 +26,15 @@ variables:
   lakebase_project:
     description: Lakebase Autoscaling project for the case store
     default: febar-ops
+  genie_space_id:
+    description: Genie space created by tools/create_genie.py (src/genie/space_id.txt)
+    default: 01f1e710e2f1183284ccb47bc5215473
+  lakebase_branch:
+    description: Lakebase Autoscaling branch for the case store
+    default: projects/febar-ops/branches/production
+  lakebase_database:
+    description: Lakebase database resource
+    default: projects/febar-ops/branches/production/databases/databricks-postgres
   app_name:
     description: "App name: lowercase letters, digits and hyphens; max 30 characters"
     default: febar-ops-app

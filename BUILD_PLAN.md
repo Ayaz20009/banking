@@ -204,6 +204,7 @@
 **As built (step 2, 2026-11-21):**
 - `bronze_manifests` became `bronze_file_manifests`, a Python materialized view: files starting with `_` are hidden from `read_files`.
 - Added `silver_issuer_auth` (dedup on `auth_id`), `silver_acquirers`, `recon_file_control` (per-file control totals), and the private staging tables `stg_issuer_auth` and `stg_cards`, which carry the expectations.
+- **App (step 7):** FastAPI + Jinja (`src/app`, `resources/app.yml`), screens Overview / Priority list / Case view / Ask Genie; OBO user token for UC and Genie; Lakebase as the App SP with column-level grants.
 - **Readiness + Genie (step 6):** `febar_main` T5 `wave_readiness` → `gold_wave_readiness`. Genie space over 5 gold tables (`src/genie/space.json`, id in `src/genie/space_id.txt`).
 - **Lakebase (step 5):** project `febar-ops`, schema `ops` (`cases` per episode, `case_anomalies`, `case_events`); `febar_main` T2 explain (case representatives) → T3 `sync_cases` → T4 `sync_cases_back` → `gold_case_status`. The `gold_case_flags` view groups flags into episodes.
 - **Governance (step 3):** `personas` + `entitlements` tables; row filter + `card_ref` mask on gold_* and a new consumption table `auth_detail` (60-day transaction detail for the App). `febar_main` now runs T0 `setup_governance` → T1 `refresh_pipeline` → T1b `apply_tags`.

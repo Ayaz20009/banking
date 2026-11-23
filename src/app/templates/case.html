@@ -1,0 +1,48 @@
+{% extends "base.html" %}{% block body %}
+<p><a href="/cases">← Priority list</a></p>
+<h1>Case {{ case.case_id }} · {{ case.root_cause.replace('_',' ').title() }} <span class="pill {{ case.severity }}">{{ case.severity }}</span></h1>
+<p class="sub">{{ case.issuer_segment }} cards{% if case.region_scope!='ALL' %} · {{ case.region_scope }}{% endif %} · {{ case.episode_start }} → {{ case.episode_end }} ·
+  {{ case.n_flags }} flagged slice-days · est. lost spend {{ case.exposure_usd|money }} · {{ case.merchants }} merchants affected (peak day)</p>
+{% if msg %}<p class="flash">{{ msg }}</p>{% endif %}
+<div class="grid2"><div>
+  <div class="box ai"><b>AI explanation</b> <span class="muted">(likely cause, not confirmed · {{ case.prompt_version or 'not explained' }})</span>
+    <p>{{ case.llm_summary or 'No AI explanation for this case.' }}</p>
+    <p><b>Suggested next step:</b> {{ case.llm_next_step or '—' }}</p></div>
+  <h2>Evidence: flagged slices (top 12 by score)</h2>
+  <table><tr><th>Day</th><th>Slice</th><th class="r">Acceptance declines</th><th class="r">Expected</th><th class="r">z</th><th class="r">Lost spend</th><th class="r">Score</th></tr>
+  {% for e in evidence %}<tr><td>{{ e.business_date }}</td><td>{{ e.family }}: {{ e.slice_value }}</td><td class="r">{{ e.acc_declines }}</td>
+  <td class="r">{{ e.expected_declines|num(1) }}</td><td class="r">{{ e.z_score|num(1) }}</td><td class="r">{{ e.exposure_usd|money }}</td><td class="r">{{ e.score|num(1) }}</td></tr>
+  {% else %}<tr><td colspan="7" class="muted">No flagged slices visible with your access.</td></tr>{% endfor %}</table>
+  <h2>By day (largest slice that day)</h2>
+  <table><tr><th>Day</th><th class="r">Acceptance declines</th><th class="r">Expected</th><th class="r">Lost spend</th></tr>
+  {% for d in daily %}<tr><td>{{ d.business_date }}</td><td class="r">{{ d.acc_declines }}</td><td class="r">{{ d.expected_declines|num(1) }}</td><td class="r">{{ d.exposure_usd|money }}</td></tr>{% endfor %}</table>
+</div><div>
+  <div class="box"><b>Status</b> <span class="st">{{ case.status }}</span><br>
+    <span class="muted">Assignee</span> {{ case.assignee or '—' }}<br><span class="muted">Owner team</span> {{ case.owner_team or '—' }}
+    (suggested: {{ case.suggested_owner_team }})<br><span class="muted">Due</span> {{ case.due_date or '—' }}<br>
+    {% if case.resolution_code %}<span class="muted">Resolution</span> {{ case.resolution_code }} · recovered {{ case.recovered_spend_usd|money }}<br>{% endif %}
+    <span class="muted">Version</span> {{ case.version }}</div>
+  <div class="box"><b>Act on this case</b><br>
+    {% set v = case.version %}
+    {% if case.status == 'OPEN' %}<form class="inline" method="post" action="/cases/{{ case.case_id }}/action"><input type="hidden" name="version" value="{{ v }}">
+      <input type="hidden" name="action" value="claim"><button>Claim</button></form><br>{% endif %}
+    <form class="inline" method="post" action="/cases/{{ case.case_id }}/action"><input type="hidden" name="version" value="{{ v }}"><input type="hidden" name="action" value="status">
+      <select name="status">{% for s in statuses if s not in ['RESOLVED','DISMISSED'] %}<option {{ 'selected' if s==case.status }}>{{ s }}</option>{% endfor %}</select><button class="secondary">Set status</button></form>
+    <form class="inline" method="post" action="/cases/{{ case.case_id }}/action"><input type="hidden" name="version" value="{{ v }}"><input type="hidden" name="action" value="owner">
+      <select name="owner_team">{% for t in teams %}<option {{ 'selected' if t==case.owner_team }}>{{ t }}</option>{% endfor %}</select><button class="secondary">Set owner</button></form>
+    <form class="inline" method="post" action="/cases/{{ case.case_id }}/action"><input type="hidden" name="version" value="{{ v }}"><input type="hidden" name="action" value="due">
+      <input type="date" name="due_date"><button class="secondary">Set due date</button></form>
+    <form method="post" action="/cases/{{ case.case_id }}/action"><input type="hidden" name="version" value="{{ v }}"><input type="hidden" name="action" value="note">
+      <textarea name="note" rows="2" style="width:100%" placeholder="Add a note"></textarea><button class="secondary">Add note</button></form>
+    <form method="post" action="/cases/{{ case.case_id }}/action" style="margin-top:8px"><input type="hidden" name="version" value="{{ v }}">
+      <select name="resolution_code">{% for r in resolutions %}<option>{{ r }}</option>{% endfor %}</select>
+      <input name="recovered_spend_usd" placeholder="Recovered $" size="10">
+      <button name="action" value="resolve">Resolve</button> <button class="secondary" name="action" value="dismiss">Dismiss</button></form>
+  </div>
+  <h2>History</h2>
+  <table>{% for e in events %}<tr><td class="muted">{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+    <td><b>{{ e.event_type }}</b>{% if e.old_value or e.new_value %} {{ e.old_value or '' }} → {{ (e.new_value or '')[:60] }}{% endif %}
+    {% if e.note %}<br>{{ e.note }}{% endif %}<br><span class="muted">{{ e.actor }} ({{ e.actor_type|lower }})</span></td></tr>{% endfor %}</table>
+</div></div>
+{% endblock %}
+{% block source %}Data from: ops.cases and ops.case_events (Lakebase, live; edits written here with a history row) · evidence from gold_anomalies (Unity Catalog, your access){% endblock %}
