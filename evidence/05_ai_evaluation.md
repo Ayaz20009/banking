@@ -1,129 +1,141 @@
-# Evidence 05: AI evaluation
+# Evidence 05: AI evaluation and iteration history
 
-- **Protocol:** EVAL_PROTOCOL.md v1 + Amendment 1 (12 months) + Amendment 2 (daily grain, own-history expected rate, 50% overlap rule) + Amendment 3 (held out = window days 41–58) + Errata 1.
-- **Commit history:** every amendment, and the frozen threshold, were committed **before** the result they govern (see the git log).
-- **Code:** `src/ai/tune_threshold.py`, `src/ai/explain_anomalies.py`, `src/ai/evaluate.py`, `src/ai/common.py`; job `febar_ai`.
-- **Result tables (append-only):** `detector_config`, `eval_detection_flags`, `eval_judge_results`, `eval_runs`.
+Generated 2026-11-24T20:08:54Z by tools/generate_evidence.py from the live workspace.
 
-## 1. Detection: explainable score vs the dashboard rule, against the answer key
+Proves how well the intelligent step works, measured against the answer key under the pre-registered protocol (EVAL_PROTOCOL.md): detection precision and recall of the method vs a simple baseline on tuning and held-out days, and LLM-judge plus rule-check pass rates of the explanations for each prompt version (the iteration history). Every row comes from the `eval_runs` and `eval_judge_results` tables written by `src/ai/evaluate.py`; failures are shown, not hidden.
 
-**Corrected run (Errata 1), the primary result** (run `eval_v1b`, 2026-11-23T06:59:57.706968Z, threshold 45 frozen 2026-11-23T06:37:57.166940Z)
+## Evaluation runs
 
-| Split | Method | Flags | Hits | Precision (Wilson 95%) | Incidents caught | Incident-days flagged | Decoy-driven flags | Delay (days) | Root cause correct |
-|---|---|---|---|---|---|---|---|---|---|
-| tuning | method | 42 | 42 | 100.0% (91.6–100.0%) | 2/2 (INC1, INC2) | INC1 15/15, INC2 9/9 | 0 | INC1 0, INC2 0 | INC1 ✓, INC2 ✓ |
-| tuning | baseline | 539 | 15 | 2.8% (1.7–4.5%) | 2/2 (INC1, INC2) | INC1 5/15, INC2 2/9 | 0 | INC1 0, INC2 0 | INC1 —, INC2 — |
-| holdout | method | 210 | 210 | 100.0% (98.2–100.0%) | 2/2 (INC3, INC4) | INC3 11/11, INC4 3/3 | 0 | INC3 0, INC4 0 | INC3 ✓, INC4 ✓ |
-| holdout | baseline | 296 | 31 | 10.5% (7.5–14.5%) | 2/2 (INC3, INC4) | INC3 10/11, INC4 3/3 | 125 | INC3 0, INC4 0 | INC3 —, INC4 — |
-
-No-claim conditions: `beats_baseline_by_20pts_at_equal_or_better_precision` = **False**, `decoy_flagged_by_method` = **False**, `method_precision_below_50pct` = **False**, `look_ahead_detected` = **False**. Timing rule: 0 Meridian rows in the window arrived after decision time (excluded by construction).
+| run_label | run_at_utc | protocol | detector | threshold | frozen_at_utc | has detection | has genai |
+|---|---|---|---|---|---|---|---|
+| eval_v1 | 2026-11-23T06:51:52.536625Z | v1 + A1 + A2 | detector_v1 | 45 | 2026-11-23T06:37:57.166940Z | True | True |
+| eval_v1b | 2026-11-23T06:59:57.706968Z | v1 + A1 + A2 | detector_v1 | 45 | 2026-11-23T06:37:57.166940Z | True | True |
+| eval_v2 | 2026-11-23T07:03:39.187490Z | v1 + A1 + A2 | detector_v1 | 45 | 2026-11-23T06:37:57.166940Z | False | True |
+| eval_v3 | 2026-11-23T07:17:03.503932Z | v1 + A1 + A2 | detector_v1 | 45 | 2026-11-23T06:37:57.166940Z | False | True |
+| eval_supp_41_60 | 2026-11-23T16:50:26.261269Z | v1 + A1 + A2 + A3 + Errata 1 | detector_v1 | 45 | 2026-11-23T06:37:57.166940Z | True | False |
 
 
-Breakdown of held-out flags by what drove them (`eval_detection_flags`, `eval_v1b`):
+## Detection: method vs baseline (counts of daily flags; a hit = the flag overlaps a planted incident)
 
-| method | hit | flags |
+| run | method | split | days | flags | hits | precision | precision 95% CI (Wilson) | incidents caught | incident-day recall | decoy flags |
+|---|---|---|---|---|---|---|---|---|---|---|
+| eval_v1 | method | tuning | 2026-09-21..2026-10-30 | 42 | 42 | 1 | 0.916–1.000 | 2/2 | 1 | 0 |
+| eval_v1 | method | holdout | 2026-10-31..2026-11-17 | 210 | 196 | 0.933 | 0.891–0.960 | 2/2 | 1 | 14 |
+| eval_v1 | baseline | tuning | 2026-09-21..2026-10-30 | 539 | 15 | 0.028 | 0.017–0.045 | 2/2 | 0.292 | 0 |
+| eval_v1 | baseline | holdout | 2026-10-31..2026-11-17 | 296 | 31 | 0.105 | 0.075–0.145 | 2/2 | 0.929 | 125 |
+| eval_v1b | method | tuning | 2026-09-21..2026-10-30 | 42 | 42 | 1 | 0.916–1.000 | 2/2 | 1 | 0 |
+| eval_v1b | method | holdout | 2026-10-31..2026-11-17 | 210 | 210 | 1 | 0.982–1.000 | 2/2 | 1 | 0 |
+| eval_v1b | baseline | tuning | 2026-09-21..2026-10-30 | 539 | 15 | 0.028 | 0.017–0.045 | 2/2 | 0.292 | 0 |
+| eval_v1b | baseline | holdout | 2026-10-31..2026-11-17 | 296 | 31 | 0.105 | 0.075–0.145 | 2/2 | 0.929 | 125 |
+| eval_supp_41_60 | method | tuning | 2026-09-21..2026-10-30 | 42 | 42 | 1 | 0.916–1.000 | 2/2 | 1 | 0 |
+| eval_supp_41_60 | method | holdout | 2026-10-31..2026-11-19 | 210 | 210 | 1 | 0.982–1.000 | 2/2 | 1 | 0 |
+| eval_supp_41_60 | baseline | tuning | 2026-09-21..2026-10-30 | 539 | 15 | 0.028 | 0.017–0.045 | 2/2 | 0.292 | 0 |
+| eval_supp_41_60 | baseline | holdout | 2026-10-31..2026-11-19 | 304 | 31 | 0.102 | 0.073–0.141 | 2/2 | 0.929 | 125 |
+
+
+### Per incident (method)
+
+| run | split | incident | caught | first flag | delay (days) | days flagged | root cause at first flag | root cause correct |
+|---|---|---|---|---|---|---|---|---|
+| eval_v1 | tuning | INC1 | True | 2026-09-24 | 0 | 15/15 | ACCEPTANCE_CONFIG | True |
+| eval_v1 | tuning | INC2 | True | 2026-10-12 | 0 | 9/9 | CROSS_BORDER_BLOCK | True |
+| eval_v1 | holdout | INC3 | True | 2026-11-02 | 0 | 11/11 | CARD_ON_FILE_STALE | True |
+| eval_v1 | holdout | INC4 | True | 2026-11-14 | 0 | 3/3 | PROCESSOR_TIMEOUT | True |
+| eval_v1b | tuning | INC1 | True | 2026-09-24 | 0 | 15/15 | ACCEPTANCE_CONFIG | True |
+| eval_v1b | tuning | INC2 | True | 2026-10-12 | 0 | 9/9 | CROSS_BORDER_BLOCK | True |
+| eval_v1b | holdout | INC3 | True | 2026-11-02 | 0 | 11/11 | CARD_ON_FILE_STALE | True |
+| eval_v1b | holdout | INC4 | True | 2026-11-14 | 0 | 3/3 | PROCESSOR_TIMEOUT | True |
+| eval_supp_41_60 | tuning | INC1 | True | 2026-09-24 | 0 | 15/15 | ACCEPTANCE_CONFIG | True |
+| eval_supp_41_60 | tuning | INC2 | True | 2026-10-12 | 0 | 9/9 | CROSS_BORDER_BLOCK | True |
+| eval_supp_41_60 | holdout | INC3 | True | 2026-11-02 | 0 | 11/11 | CARD_ON_FILE_STALE | True |
+| eval_supp_41_60 | holdout | INC4 | True | 2026-11-14 | 0 | 3/3 | PROCESSOR_TIMEOUT | True |
+
+
+### No-claim conditions (EVAL_PROTOCOL §6: if a condition is TRUE, the matching claim is not made)
+
+| run | condition | value |
 |---|---|---|
-| baseline |  | 140 |
-| baseline | DECOY | 125 |
-| baseline | INC3 | 21 |
-| baseline | INC4 | 10 |
-| method | INC3 | 161 |
-| method | INC4 | 49 |
-
-Method flags by slice family (held out):
-
-| family | flags | days |
-|---|---|---|
-| REGION | 53 | 14 |
-| ACQUIRER_CHANNEL | 53 | 14 |
-| MCC_GROUP_XB | 48 | 14 |
-| CARD_SEGMENT | 29 | 14 |
-| CHANNEL | 27 | 14 |
-
-**As first run (`eval_v1`, kept unchanged): the method labels counted the decoy's non-acceptance declines (Errata 1 §1)** (run `eval_v1`, 2026-11-23T06:51:52.536625Z, threshold 45 frozen 2026-11-23T06:37:57.166940Z)
-
-| Split | Method | Flags | Hits | Precision (Wilson 95%) | Incidents caught | Incident-days flagged | Decoy-driven flags | Delay (days) | Root cause correct |
-|---|---|---|---|---|---|---|---|---|---|
-| tuning | method | 42 | 42 | 100.0% (91.6–100.0%) | 2/2 (INC1, INC2) | INC1 15/15, INC2 9/9 | 0 | INC1 0, INC2 0 | INC1 ✓, INC2 ✓ |
-| tuning | baseline | 539 | 15 | 2.8% (1.7–4.5%) | 2/2 (INC1, INC2) | INC1 5/15, INC2 2/9 | 0 | INC1 0, INC2 0 | INC1 —, INC2 — |
-| holdout | method | 210 | 196 | 93.3% (89.1–96.0%) | 2/2 (INC3, INC4) | INC3 11/11, INC4 3/3 | 14 | INC3 0, INC4 0 | INC3 ✓, INC4 ✓ |
-| holdout | baseline | 296 | 31 | 10.5% (7.5–14.5%) | 2/2 (INC3, INC4) | INC3 10/11, INC4 3/3 | 125 | INC3 0, INC4 0 | INC3 —, INC4 — |
-
-No-claim conditions: `beats_baseline_by_20pts_at_equal_or_better_precision` = **False**, `decoy_flagged_by_method` = **True**, `method_precision_below_50pct` = **False**, `look_ahead_detected` = **False**. Timing rule: 0 Meridian rows in the window arrived after decision time (excluded by construction).
+| eval_v1 | beats_baseline_by_20pts_at_equal_or_better_precision | False |
+| eval_v1 | decoy_flagged_by_method | True |
+| eval_v1 | method_precision_below_50pct | False |
+| eval_v1 | look_ahead_detected | False |
+| eval_v1 | no_claim_grounding_below_90pct | True |
+| eval_v1b | beats_baseline_by_20pts_at_equal_or_better_precision | False |
+| eval_v1b | decoy_flagged_by_method | False |
+| eval_v1b | method_precision_below_50pct | False |
+| eval_v1b | look_ahead_detected | False |
+| eval_v1b | no_claim_grounding_below_90pct | False |
+| eval_v2 | no_claim_grounding_below_90pct | False |
+| eval_v3 | no_claim_grounding_below_90pct | False |
+| eval_supp_41_60 | beats_baseline_by_20pts_at_equal_or_better_precision | False |
+| eval_supp_41_60 | decoy_flagged_by_method | False |
+| eval_supp_41_60 | method_precision_below_50pct | False |
+| eval_supp_41_60 | look_ahead_detected | False |
 
 
-### What we can and cannot claim (decided with the submitter, 2026-11-23)
-- **No claim of higher recall.** Both the method and the dashboard rule caught **2/2** held-out incidents on day 0, so no-claim condition 1 is triggered as written.
-- **Stated as facts:** at the frozen threshold, **100% of the method's held-out alerts were real** (210/210), against **10.5%** for the dashboard rule (31/296). The dashboard rule raised **125 alerts driven by the legitimate insufficient-funds decoy**; the method raised **0**.
-- The method also names the root cause: **correct for 4/4 incidents** (tuning and held out). The dashboard rule gives no cause.
-- **Read the precision with care.** The 210 flags are **not independent**: they cover only 2 incidents and 14 incident-days, flagged across 5 overlapping slice families. The Wilson interval treats the flags as independent, so it **overstates certainty**. The honest unit is the incident: 2/2 caught, 14/14 incident-days, 0 false-positive days.
-- **Small sample** (stated in advance in the protocol): 2 held-out incidents. The result is indicative, not statistically significant.
-- **Synthetic data:** the background noise in the generated data is regular, which makes clean separation easier than it would be on real traffic.
+## Explanations: judge and rule pass rates per prompt version (iteration history)
 
-## 2. GenAI explanations: 30 held-out rows (same keys in every run), 4 MLflow Guidelines judges + 2 rule checks
+| run | prompt | judge model | rows | LLM errors | cause_agreement | grounded_in_facts | actionable_next_step | no_invented_data | rule_numbers_grounded | rule_cause_matches | MLflow run |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| eval_v1 | v1 | databricks-gpt-5-4 | 30 | 0 | 30/30 | 0/30 | 30/30 | 0/30 | 6/30 | 30/30 | a5ce8d3c3ebc4040be53c89ef8ed149d |
+| eval_v1b | v1 | databricks-gpt-5-4 | 30 | 0 | 30/30 | 0/30 | 29/30 | 0/30 | 30/30 | 30/30 | de0ae0fe2e924cb58db5aa609d5a6eb1 |
+| eval_v2 | v2 | databricks-gpt-5-4 | 30 | 0 | 30/30 | 0/30 | 22/30 | 4/30 | 30/30 | 30/30 | e11d3d759d394f37b3d5e371892bae7d |
+| eval_v3 | v3 | databricks-gpt-5-4 | 30 | 0 | 30/30 | 1/30 | 23/30 | 9/30 | 30/30 | 30/30 | 502a6c985e9d480d9d9cc6e51d6b6ace |
 
-- **Generator:** `databricks-claude-sonnet-4-6` (Anthropic). **Judge:** `databricks-gpt-5-4` (OpenAI), a different family.
-- **Concurrency:** limited to 4 workers.
-- **MLflow runs:** v1 `a5ce8d3c3ebc4040be53c89ef8ed149d`, v1b `de0ae0fe2e924cb58db5aa609d5a6eb1`, v2 `e11d3d759d394f37b3d5e371892bae7d` (experiment `febar_ai_evaluation`).
 
-| Judge | Kind | v1 as run (`eval_v1`) | v1, corrected code (`eval_v1b`) | v2 (`eval_v2`) |
+Judges `actionable_next_step`, `no_invented_data`, `grounded_in_facts` and `cause_agreement` are MLflow 3 Guidelines judges (LLM); `rule_numbers_grounded` and `rule_cause_matches` are deterministic rule checks (every number in the text appears in the facts; the stated cause equals the computed root cause).
+
+
+## Judge results as stored (latest run per prompt version)
+
+| run_label | prompt_version | judge | n | pass |
 |---|---|---|---|---|
-| `grounded_in_facts` | MLflow Guidelines, judge `databricks-gpt-5-4` | 0/30 | 0/30 | 0/30 |
-| `cause_agreement` | MLflow Guidelines, judge `databricks-gpt-5-4` | 30/30 | 30/30 | 30/30 |
-| `actionable_next_step` | MLflow Guidelines, judge `databricks-gpt-5-4` | 30/30 | 29/30 | 22/30 |
-| `no_invented_data` | MLflow Guidelines, judge `databricks-gpt-5-4` | 0/30 | 0/30 | 4/30 |
-| `rule_numbers_grounded` | rule (wins over judge for numbers) | 6/30 | 30/30 | 30/30 |
-| `rule_cause_matches` | rule (wins over judge for numbers) | 30/30 | 30/30 | 30/30 |
-
-**Protocol checks:**
-- **Grounding no-claim (§6, the rule check is decisive):** 30/30 after the Errata fix, so this condition is **not** triggered for v1b or v2.
-- **The LLM-judged `grounded_in_facts` fails 0/30 in every run.** See section 3 for why.
-
-## 3. Iteration history (one iteration, as agreed)
-
-| Step | Change | Effect |
-|---|---|---|
-| v1 | Prompt rules: only the facts, numbers from the facts, cause stated as likely, no rank/severity | Actionable 30/30, cause agreement 30/30. **But the judges found invented operational mechanics** ("account updater run", "PANs, expiry dates or network tokens", "credential-update pipeline", "before end of business"). The judges were **right**. |
-| Errata 1 | Evaluation code only (decoy labels; numeric comparison) | Method decoy flags 14 → 0, held-out precision 93.3% → 100%; rule number check 6/30 → 30/30. Nothing about the model changed. |
-| v2 | Facts gain a glossary; prompt adds 3 rules (cause only in the category's words, no new systems or processes, copy numbers exactly; next_step uses only facts) | Invented mechanics gone (no_invented_data 0 → 4/30). **Actionability regressed 29 → 22/30**: the "use only items in the facts" rule produced generic "review … and determine" next steps. The judge is **right**; my change caused it. |
-
-### Where the judges are wrong (for the submitter to review; judges NOT changed)
-- **`grounded_in_facts`** reads "every statement must be supported" literally. It rejects wording copied from the glossary inside the facts: "merchant category group slice" (the glossary says *MCC_GROUP_XB = merchant category group…*), "authorization attempts" (the glossary says *attempts = card authorization attempts*), and "highly unusual" for a z-score the facts describe as "how unusual…". These are **judge errors**. Some of its complaints are fair: "a persistent pattern since the card migration" is an inference the facts do not state.
-- **`no_invented_data`** rejects "following the migration" although the facts say "cards already migrated". That is mostly a judge error.
-- Protocol §5 defines criterion (a) as *every number cited matches the source row*. The `grounded_in_facts` guideline is **stricter** (every statement), so its 0/30 is not the protocol's criterion (a). Criterion (a) is decided by the rule check: 30/30.
-
-### Items flagged for human review
-`eval_v2` rows where `actionable_next_step` failed (8 rows):
-
-- `2026-11-12|OWN|CARD_SEGMENT|DOMESTIC`
-- `2026-11-12|OWN|CARD_SEGMENT|RECURRING_HEAVY`
-- `2026-11-15|OWN|CARD_SEGMENT|DOMESTIC`
-- `2026-11-15|OWN|CHANNEL|ECOM`
-- `2026-11-15|OWN|MCC_GROUP_XB|RETAIL / DOMESTIC`
-- `2026-11-16|OWN|CHANNEL|ECOM`
-- `2026-11-16|OWN|MCC_GROUP_XB|FOOD_GROCERY / DOMESTIC`
-- `2026-11-16|THIRD_PARTY|CARD_SEGMENT|DOMESTIC`
-
-Every judge verdict and rationale, for all three runs, is in `eval_judge_results`.
-
-## 4. Before / after in one line
-**v1** was concrete but invented mechanics. **v2** is grounded but too generic. Neither prompt is clean on both. Which version to use in production, or whether to run a second iteration, is open for the submitter (see BUILD_LOG / DECISIONS).
+| eval_v1b | v1 | actionable_next_step | 30 | 29 |
+| eval_v1b | v1 | cause_agreement | 30 | 30 |
+| eval_v1b | v1 | grounded_in_facts | 30 | 0 |
+| eval_v1b | v1 | no_invented_data | 30 | 0 |
+| eval_v1b | v1 | rule_cause_matches | 30 | 30 |
+| eval_v1b | v1 | rule_numbers_grounded | 30 | 30 |
+| eval_v2 | v2 | actionable_next_step | 30 | 22 |
+| eval_v2 | v2 | cause_agreement | 30 | 30 |
+| eval_v2 | v2 | grounded_in_facts | 30 | 0 |
+| eval_v2 | v2 | no_invented_data | 30 | 4 |
+| eval_v2 | v2 | rule_cause_matches | 30 | 30 |
+| eval_v2 | v2 | rule_numbers_grounded | 30 | 30 |
+| eval_v3 | v3 | actionable_next_step | 30 | 23 |
+| eval_v3 | v3 | cause_agreement | 30 | 30 |
+| eval_v3 | v3 | grounded_in_facts | 30 | 1 |
+| eval_v3 | v3 | no_invented_data | 30 | 9 |
+| eval_v3 | v3 | rule_cause_matches | 30 | 30 |
+| eval_v3 | v3 | rule_numbers_grounded | 30 | 30 |
 
 
-## 5. Second iteration, v3 (approved by the submitter 2026-11-23): playbook in the facts
+## Failing judgements, verbatim (latest prompt version, up to 3 per judge)
 
-- **Change:** the facts gain `playbook_for_dominant_category`, two standard checks per root cause written by the team. The prompt asks the model to pick the most fitting check and make it specific with facts. Run `eval_v3`, MLflow run `502a6c985e9d480d9d9cc6e51d6b6ace`, same 30 keys, same judges.
+| run_label | prompt_version | judge | anomaly_key | value | rationale |
+|---|---|---|---|---|---|
+| eval_v3 | v3 | actionable_next_step | 2026-11-14\|OWN\|MCC_GROUP_XB\|FUEL / DOMESTIC | no | The guideline requires next_step to be one concrete action an operations team could start today. The provided next_step contains two actions joined together: first, check processor response times on the acquired network for the FUEL / DOMESTIC slice on 2026-11-14, and second, if timeouts continue, open an incident with the processing team. Because it is not a single concrete action, it does not fully satisfy the guideline. The response does avoid purely generic advice, since it specifies what to check and whom to contact, but it still fails the requirement that next_step be one concrete action. |
+| eval_v3 | v3 | actionable_next_step | 2026-11-15\|OWN\|CARD_SEGMENT\|DOMESTIC | no | The applicable guideline is that next_step must be one concrete action an operations team could start today, stating what to check or whom to contact, and fitting the likely cause and owner_team. The provided next_step includes two actions joined by a conditional: first checking processor response times, and then, if timeouts continue, opening an incident with the processing team. Because it is not one concrete action, it does not fully satisfy the guideline. The second guideline about avoiding generic advice is satisfied, since the response specifies what to check and whom to contact rather than saying only to monitor or investigate further. |
+| eval_v3 | v3 | actionable_next_step | 2026-11-16\|OWN\|ACQUIRER_CHANNEL\|ACQ-003 / CP | no | The key guideline requires next_step to be one concrete action an operations team could start today. The provided next_step contains two actions: first, check processor response times on the acquired network for the ACQ-003 / CP slice on 2026-11-16, and second, if timeouts continue, open an incident with the processing team. Because it includes multiple actions rather than one concrete action, it does not fully satisfy the guideline. The second guideline says generic advice without saying what to check fails; that part is satisfied because it specifies what to check. However, full compliance fails due to the next_step not being a single concrete action. |
+| eval_v3 | v3 | grounded_in_facts | 2026-11-11\|OWN\|MCC_GROUP_XB\|DIGITAL / DOMESTIC | no | Guideline 1 is not fully satisfied because every statement in the summary and next_step must be supported by the facts in the request. Most statements are supported, but the summary says the issue is "highly unusual relative to the prior 28 days." The facts define z_score as measuring unusualness versus the prior 28 days, but they do not state the qualitative characterization "highly unusual." That wording is an unsupported interpretation rather than a stated fact. The rest of the summary and next_step are supported by the provided facts, including the date, slice, network, counts, dominant category, merchant count, prior-day elevation count, lost spend, owner team, and the playbook actions. Guideline 2 is satisfied because all numbers appearing in the response are present in the request facts with the same values: 2026-11-11, 47, 15.5, 31.5, 7.8, 2, 89.0%, 42, 46, 3, 2, and 256.0. Because at least one guideline is not satisfied, the overall result is no. |
+| eval_v3 | v3 | grounded_in_facts | 2026-11-12\|OWN\|CARD_SEGMENT\|DOMESTIC | no | The response does not fully comply with the guidelines. Guideline 1 requires every statement in the summary and next_step to be supported by the facts in the request. Several statements are unsupported or overstate the facts: in the summary, "indicating this level of decline activity is highly unusual relative to the prior 28 days" is not directly supported by the facts, which only define z_score as how unusual declines are versus the same slice in the prior 28 days, not that a z_score of 6.9 specifically means "highly unusual." Also in the summary, "is elevated across all 2 of the last 2 prior days" is unsupported because the fact only says elevated_on_prior_days_of_last_2 = 2, which supports elevation on 2 prior days out of the last 2, but not necessarily the phrasing "across all 2 of the last 2 prior days." In next_step, "85 declines across 111 merchants on the acquired network" is not fully supported for the dominant category: 85 is the count for CARD_ON_FILE_STALE declines, and 111 is the total merchants with acceptance declines overall, but the facts do not state that all 111 merchants correspond to the stored-credential declines category. Guideline 2 requires every number in the response to appear in the request's facts. This is satisfied: 2026-11-12, 114, 60.1, 53.9, 6.9, 75.0, 2, 111, 1,628.00/1628.0, and 85 all appear in the request facts with acceptable formatting. Because guideline 1 is violated, the overall result is no. |
+| eval_v3 | v3 | grounded_in_facts | 2026-11-12\|OWN\|CARD_SEGMENT\|RECURRING_HEAVY | no | The response does not fully comply with the guidelines. Guideline 1 is violated because some statements in the summary and next_step are not fully supported by the request facts. In the summary, "highly unusual relative to the prior 28 days" is an interpretation not explicitly stated in the facts; the facts only define z_score as how unusual the declines are versus the same slice in the prior 28 days. "indicating a persistent issue rather than a one-day spike" is also an unsupported inference from the fact that it was elevated on 2 of the last 2 prior days. "the likely cause is that stored card credentials held by recurring/card-on-file merchants were not updated after the cards were reissued during or following migration" goes beyond the stated facts; while the dominant decline category definition mentions not updated after reissue and the network is already migrated, the causal phrasing "during or following migration" is not stated. In next_step, the word "today" is unsupported by the request facts. Guideline 2 is satisfied because the numbers used in the response—2026-11-12, 22, 6.4, 15.6, 5.7, 100.0, 21, 2, 2, and 611.0—all appear in the request facts. |
+| eval_v3 | v3 | no_invented_data | 2026-11-11\|OWN\|MCC_GROUP_XB\|DIGITAL / DOMESTIC | no | Guideline 1 is not fully satisfied because the response mentions a field not present in the request facts as stated: "46 merchants" in the next_step. The facts include "merchants_with_acceptance_declines": 46, but do not provide a list of merchants, so referring to "the 46 merchants" introduces a more specific merchant reference than the request facts explicitly contain. Guideline 2 is also not fully satisfied because the summary states the dominant category "meaning stored card credentials were not updated after reissue," which presents the cause as a confirmed fact rather than as likely or possible. Although the response includes "certainty": "likely," the explanatory sentence is still framed too definitively. Therefore the inputs do not fully comply with all provided guidelines. |
+| eval_v3 | v3 | no_invented_data | 2026-11-12\|OWN\|CARD_SEGMENT\|DOMESTIC | no | Guideline 1 is not fully satisfied because the response mentions details not present in the request's facts. In particular, the summary says the pattern is "elevated across all 2 of the last 2 prior days," but the facts only say elevated_on_prior_days_of_last_2 = 2 and do not state "all" explicitly. More clearly, the next_step says "85 declines across 111 merchants on the acquired network." While 85 is the count for the dominant decline category and 111 is the total merchants with acceptance declines, the facts do not state that those 85 dominant-category declines occurred across 111 merchants, so this introduces an unsupported combined assertion. Guideline 2 is satisfied because the response frames cause as likely via the fields "likely_cause" and "certainty": "likely," rather than as a confirmed fact. Because at least one guideline is not satisfied, the overall result is "no". |
+| eval_v3 | v3 | no_invented_data | 2026-11-12\|OWN\|CARD_SEGMENT\|RECURRING_HEAVY | no | Guideline 1 is not fully satisfied because the response mentions details not present in the request's facts. In the summary, it says recurring/card-on-file merchants were not updated "during or following migration," but the request facts do not mention any reissue timing during or after migration. In the next_step, it adds "today," which is not a date or timing stated in the request facts. Guideline 2 is satisfied because the response presents the cause as likely rather than confirmed, using phrases such as "the likely cause is." Because at least one guideline is not satisfied, the overall result is no. |
 
-| Judge | v1 (`eval_v1b`) | v2 | **v3** |
+
+## Detection flags per method in the held-out window (latest run), by hit type
+
+| run_label | method | hit | flags |
 |---|---|---|---|
-| `grounded_in_facts` | 0/30 | 0/30 | 1/30 |
-| `cause_agreement` | 30/30 | 30/30 | 30/30 |
-| `actionable_next_step` | 29/30 | 22/30 | 23/30 |
-| `no_invented_data` | 0/30 | 4/30 | 9/30 |
-| `rule_numbers_grounded` | 30/30 | 30/30 | 30/30 |
-| `rule_cause_matches` | 30/30 | 30/30 | 30/30 |
-
-- **Result:** v3 is the most grounded version (no_invented 9/30; v1's invented mechanics are gone). Actionability barely recovered (23/30).
-- **Why the actionability failures:** the model **joins both playbook actions** ("check processor response times … and, if timeouts continue, open an incident"), which breaks the judge's "one concrete action" rule. **The judge is right.**
-- **No third iteration was run.** v3 is used for the cases (`ops.cases.llm_next_step`).
-- **Remaining weakness, stated openly:** explanation quality has not met the bar; the 90% grounding no-claim threshold is met only by the rule check (30/30), not by the LLM judges.
+| eval_supp_41_60 | baseline |  | 672 |
+| eval_supp_41_60 | baseline | DECOY | 125 |
+| eval_supp_41_60 | baseline | INC1 | 5 |
+| eval_supp_41_60 | baseline | INC2 | 10 |
+| eval_supp_41_60 | baseline | INC3 | 21 |
+| eval_supp_41_60 | baseline | INC4 | 10 |
+| eval_supp_41_60 | method | INC1 | 21 |
+| eval_supp_41_60 | method | INC2 | 21 |
+| eval_supp_41_60 | method | INC3 | 161 |
+| eval_supp_41_60 | method | INC4 | 49 |
